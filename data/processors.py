@@ -12,6 +12,6 @@ def get_tokenizer(name):
 
 def get_image_processor(img_size):
     return transforms.Compose([
-        transforms.Resize((img_size, img_size)),
+        transforms.Resize((img_size, img_size), interpolation=transforms.InterpolationMode.BICUBIC),
         transforms.ToTensor()
     ])

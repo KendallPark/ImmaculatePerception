@@ -87,6 +87,8 @@ def get_dataloaders(train_cfg, vlm_cfg):
         drop_last=True,
         worker_init_fn=seed_worker,
         generator=g,
+        persistent_workers=train_cfg.dataloader_persistent_workers,
+        prefetch_factor=train_cfg.dataloader_prefetch_factor,
     )
 
     val_loader = DataLoader(
@@ -99,6 +101,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
         drop_last=True,
         worker_init_fn=seed_worker,
         generator=g,
+        persistent_workers=train_cfg.dataloader_persistent_workers,
     )
 
     test_loader = DataLoader(
@@ -109,6 +112,8 @@ def get_dataloaders(train_cfg, vlm_cfg):
         pin_memory=True,
         worker_init_fn=seed_worker,
         generator=g,
+        # Leave num_workers as default (0) or 1 for test_loader
+        # unless it is a very large evaluation set.
         )
 
     return train_loader, val_loader, test_loader
@@ -120,6 +125,7 @@ def test_mmstar(model, tokenizer, test_loader, device):
     with torch.no_grad():
         for batch in test_loader:
             image = batch['images'].to(device)
+            image = (image - 0.5) / 0.5
             input_ids = batch['input_ids'].to(device)
             labels = batch['labels'].to(device)
             attention_mask = batch['attention_mask'].to(device)
@@ -214,6 +220,7 @@ def train(train_cfg, vlm_cfg):
         for batch in train_loader:
             batch_start_time = time.time()
             images = batch["image"].to(device)
+            images = (images - 0.5) / 0.5
             input_ids = batch["input_ids"].to(device)
             labels = batch["labels"].to(device)
             attention_mask = batch["attention_mask"].to(device)
@@ -245,12 +252,13 @@ def train(train_cfg, vlm_cfg):
 
             if train_cfg.eval_in_epochs and global_step % 250 == 0:
                 model.eval()
-                torch.cuda.empty_cache()  # Clear GPU memory
+
                 with torch.no_grad():
                     epoch_accuracy = test_mmstar(model, tokenizer, test_loader, device)
                     total_val_loss = 0
                     for batch in val_loader:
                         images = batch["image"].to(device)
+                        images = (images - 0.5) / 0.5
                         input_ids = batch["input_ids"].to(device)
                         labels = batch["labels"].to(device)
                         attention_mask = batch["attention_mask"].to(device)
