@@ -22,7 +22,7 @@ class RotaryEmbedding(nn.Module):
     def __init__(self, cfg):
         super().__init__()
         assert cfg.lm_hidden_dim % cfg.lm_n_heads == 0, "Hidden dimension must be divisible by number of heads"
-        
+
         self.dim = cfg.lm_hidden_dim // cfg.lm_n_heads # dim of each head
         self.base = cfg.lm_re_base
         self.max_seq_len = cfg.lm_max_position_embeddings
@@ -43,24 +43,24 @@ class RotaryEmbedding(nn.Module):
             inv_freq = self.inv_freq / scale
         else:
             inv_freq = self.inv_freq
-            
+
         # Compute theta = position * frequency
         # Flatten position_ids for batch processing
         flat_position_ids = position_ids.reshape(-1).float()
-        
+
         # Element-wise outer product: [seq_len] x [dim/2] => [seq_len, dim/2]
         freqs = flat_position_ids.unsqueeze(-1) * inv_freq.unsqueeze(0)
-        
+
         # Reshape to include batch dimension
         freqs = freqs.reshape(batch_size, seq_len, -1)
-        
+
         # Now create interleaved pattern
         emb = torch.cat([freqs, freqs], dim=-1)
-        
+
         # Compute cos and sin
         cos = torch.cos(emb) * self.attention_scaling
         sin = torch.sin(emb) * self.attention_scaling
-        
+
         return cos, sin
 
 # Rotates half the hidden dims of the input by swapping and negating dimensions.
@@ -74,12 +74,12 @@ def apply_rotary_pos_embd(q, k, cos, sin, unsqueeze_dim=1):
     # to the shape of q and k by adding the heads dimension
     cos = cos.unsqueeze(unsqueeze_dim)  # [batch_size, 1, seq_len, head_dim]
     sin = sin.unsqueeze(unsqueeze_dim)  # [batch_size, 1, seq_len, head_dim]
-    
+
     # Apply complex multiplication:
     # (q * cos) + (rotate_half(q) * sin)
     q_embed = (q * cos) + (rotate_half(q) * sin)
     k_embed = (k * cos) + (rotate_half(k) * sin)
-    
+
     return q_embed, k_embed
 
 # https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py#L214
@@ -118,7 +118,7 @@ class LanguageModelGroupedQueryAttention(nn.Module):
         q = self.q_proj(x).view(B, T, self.n_heads, self.head_dim).transpose(1, 2)  # (B, n_heads, T, head_dim)
         k = self.k_proj(x).view(B, T, self.n_kv_heads, self.head_dim).transpose(1, 2)  # (B, n_kv_heads, T, head_dim)
         v = self.v_proj(x).view(B, T, self.n_kv_heads, self.head_dim).transpose(1, 2)  # (B, n_kv_heads, T, head_dim)
-        
+
         # Use precomputed positional embeddings
         q, k = apply_rotary_pos_embd(q, k, cos, sin)
 
@@ -145,16 +145,16 @@ class LanguageModelGroupedQueryAttention(nn.Module):
             causal_mask = torch.tril(torch.ones(T, T, device=x.device)).view(1, 1, T, T)
             attn = attn.masked_fill(causal_mask == 0, float('-inf'))
             if attention_mask is not None:
-                attn = attn + attention_mask 
+                attn = attn + attention_mask
 
             attn = F.softmax(attn, dim=-1)
             attn = self.attn_dropout(attn)
             y = attn @ v
-            
+
             if attention_mask is not None:
                 y = y.masked_fill(padding_mask, 0.0) # Zero out the padded positions in the output
 
-        y = y.transpose(1, 2).contiguous().view(B, T, C)  
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
         y = self.out_proj(y)
         y = self.resid_dropout(y)
 
@@ -187,7 +187,7 @@ class LanguageModelBlock(nn.Module):
         self.attn = LanguageModelGroupedQueryAttention(cfg)
         self.norm1 = RMSNorm(cfg) # Input Norm
         self.norm2 = RMSNorm(cfg) # Post Attention Norm
-    
+
     def forward(self, x, cos, sin, attention_mask=None):
         res = x
         x = self.norm1(x)
@@ -234,9 +234,9 @@ class LanguageModel(nn.Module):
     def forward(self, x, attention_mask=None):
         if self.lm_use_tokens:
             x = self.token_embedding(x) # Only embed the inputs when using tokens
-        
+
         B , T, _ = x.size()
-        
+
         # Note: You could also cache these input embeddings if you want to avoid recomputing them
         position_ids = torch.arange(T, device=x.device).unsqueeze(0).expand(B, -1) # Create position ids [0, 1, 2, ..., seq_len-1]
         cos, sin = self.rotary_embd(position_ids) # Get rotary position embeddings
@@ -255,9 +255,9 @@ class LanguageModel(nn.Module):
         # Add batch dimension if needed
         if inputs.dim() == 1:
             inputs = inputs.unsqueeze(0)
-            
+
         generated = inputs.clone()
-        
+
         for _ in range(max_new_tokens):
             # Forward pass through the model
             outputs = self.forward(generated)
@@ -271,9 +271,9 @@ class LanguageModel(nn.Module):
                 # Now the model outputs embeddings
                 next_token_embedding = last_output.unsqueeze(1)  # Shape: [batch_size, 1, hidden_dim]
                 generated = torch.cat((generated, next_token_embedding), dim=1)
-            
+
             #Note: You could enable the generation to break earlier than max_new_tokens when it detects a eos token, but this does not work in batched generation (output tensors need to have the same size)
-    
+
         return generated
 
     # Load the model from a pretrained HuggingFace model (we don't want to have to train the Language Backbone from scratch)
@@ -283,19 +283,27 @@ class LanguageModel(nn.Module):
         from huggingface_hub import hf_hub_download
         import safetensors
         import torch.nn.init as init
-                
+
         # Load the HuggingFace config
         hf_config = AutoConfig.from_pretrained(cfg.lm_model_type)
-        
+
         # Store original HF vocab size before we modify it
         original_vocab_size = hf_config.vocab_size
         # print(f"Original vocabulary size from pretrained model: {original_vocab_size}")
-        
+
         # Configure model parameters from HF config
         cfg.lm_hidden_dim = hf_config.hidden_size
         cfg.lm_inter_dim = hf_config.intermediate_size
         cfg.lm_rms_eps = hf_config.rms_norm_eps
-        cfg.lm_re_base = hf_config.rope_theta
+
+        # Safe extraction of rope_theta
+        if hasattr(hf_config, 'rope_theta'):
+            cfg.lm_re_base = hf_config.rope_theta
+        elif hasattr(hf_config, 'rope_parameters') and 'rope_theta' in hf_config.rope_parameters:
+            cfg.lm_re_base = hf_config.rope_parameters['rope_theta']
+        else:
+            cfg.lm_re_base = 10000.0 # Default fallback
+
         cfg.lm_max_position_embeddings = hf_config.max_position_embeddings
         # We're keeping our own vocab size in cfg, but checking it's larger than original
         if hasattr(cfg, 'lm_vocab_size'):
@@ -306,27 +314,27 @@ class LanguageModel(nn.Module):
             # If not specified, use the original
             cfg.lm_vocab_size = original_vocab_size
             # print(f"Using original vocabulary size: {cfg.lm_vocab_size}")
-        
+
         cfg.lm_n_heads = hf_config.num_attention_heads
         cfg.lm_n_kv_heads = hf_config.num_key_value_heads
         cfg.lm_dropout = hf_config.attention_dropout
         cfg.lm_n_blocks = hf_config.num_hidden_layers
-        
+
         # Create our model with potentially larger vocabulary
         model = cls(cfg)
         safetensors_file = hf_hub_download(repo_id=cfg.lm_model_type, filename="model.safetensors")
-        
+
         sd = model.state_dict()
-        
+
         mapping = {
             'model.embed_tokens.weight': 'token_embedding.weight',
             'model.norm.weight': 'norm.weight'
         }
-        
+
         for i in range(cfg.lm_n_blocks):
             layer_prefix = f'model.layers.{i}.'
             block_prefix = f'blocks.{i}.'
-            
+
             mapping.update({
                 f"{layer_prefix}self_attn.q_proj.weight": f"{block_prefix}attn.q_proj.weight",
                 f"{layer_prefix}self_attn.k_proj.weight": f"{block_prefix}attn.k_proj.weight",
@@ -338,26 +346,26 @@ class LanguageModel(nn.Module):
                 f"{layer_prefix}input_layernorm.weight": f"{block_prefix}norm1.weight",
                 f"{layer_prefix}post_attention_layernorm.weight": f"{block_prefix}norm2.weight"
             })
-        
+
         # Special handling for token embeddings with extended vocabulary
         has_extended_embeddings = False
         with safetensors.safe_open(filename=safetensors_file, framework="pt", device="cpu") as f:
             for hf_key, our_key in mapping.items():
                 if hf_key in f.keys() and our_key in sd:
                     tensor = f.get_tensor(hf_key)
-                    
+
                     # Special handling for token embeddings if vocab sizes differ
                     if hf_key == 'model.embed_tokens.weight' and tensor.shape[0] != sd[our_key].shape[0]:
                         has_extended_embeddings = True
                         print(f"Extending token embeddings from {tensor.shape} to {sd[our_key].shape}")
-                        
+
                         # Copy existing embeddings to the beginning of our larger embedding matrix
                         sd[our_key][:tensor.shape[0]].copy_(tensor)
-                        
+
                         # Initialize the new embeddings using the same approach as the original model
                         std = 0.02  # Common value, but you might want to adjust based on model
                         init.normal_(sd[our_key][tensor.shape[0]:], mean=0.0, std=std)
-                        
+
                         print(f"Initialized {sd[our_key].shape[0] - tensor.shape[0]} new token embeddings")
                         sd['head.weight'].copy_(sd[our_key])  # Update the head weights as well
                     elif tensor.shape == sd[our_key].shape:
@@ -369,10 +377,10 @@ class LanguageModel(nn.Module):
                         print(f"Warning: Key {hf_key} not found in safetensors file")
                     if our_key not in sd:
                         print(f"Warning: Key {our_key} not found in model state dict")
-        
+
         # Load the state dict
         model.load_state_dict(sd)
-        
+
         # Handle output projection / language modeling head
         if has_extended_embeddings and hasattr(model, 'head') and 'head.weight' in sd:
             # If we have a separate output projection layer and extended the vocab
@@ -389,11 +397,11 @@ class LanguageModel(nn.Module):
                         init.normal_(sd['head.weight'][lm_head.shape[0]:], mean=0.0, std=std)
                         # Load updated weights
                         model.load_state_dict(sd)
-        
+
         # Handle weight tying (if needed)
         if cfg.lm_tie_weights and hasattr(model, 'head') and hasattr(model, 'token_embedding'):
             model.head.weight = model.token_embedding.weight
             # print("Tied token embedding and LM head weights")
-        
+
         print(f"Successfully loaded {cfg.lm_model_type} weights from safetensors. Model has {sum(p.numel() for p in model.parameters()):,} parameters.")
         return model

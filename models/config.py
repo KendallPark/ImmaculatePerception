@@ -40,17 +40,17 @@ class VLMConfig:
 
 @dataclass
 class TrainConfig:
-    lr_mp: float = 8e-3 # Scaled for batch_size 1024
-    lr_backbones: float = 4e-4 # Scaled for batch_size 1024
+    lr_mp: float = 4e-3 # Scaled for batch_size 64
+    lr_backbones: float = 2e-4 # Scaled for batch_size 64
     data_cutoff_idx: int = None
-    val_ratio: float = 0.01
-    batch_size: int = 1024 # Increased for RTX 4090 (24GB VRAM)
+    val_ratio: float = 0.1
+    batch_size: int = 64 # Increased for RTX 4090 (24GB VRAM)
     mmstar_batch_size: int = 64
     eval_in_epochs: bool = True
-    epochs: int = 5
+    epochs: int = 1
     compile: bool = True
     use_tf32: bool = True # Enable TF32 for faster training on Ampere+ GPUs
-    dataloader_num_workers: int = 12 # Optimized for high-core CPUs common with 4090 builds
+    dataloader_num_workers: int = 8 # Optimized for high-core CPUs common with 4090 builds
     resume_from_vlm_checkpoint: bool = False # Indicate if the training should be resumed from a checkpoint of the whole VLM or you want to start from scratch
     train_dataset_path: str = 'HuggingFaceM4/the_cauldron'
     train_dataset_name: tuple[str, ...] = ("ai2d", "aokvqa", "chart2text", "chartqa", "clevr", "cocoqa", "datikz", "diagram_image_to_text", "docvqa", "dvqa", "figureqa", "finqa", "geomverse", "hateful_memes", "hitab", "iam", "iconqa", "infographic_vqa", "intergps", "localized_narratives", "mapqa", "multihiertt", "ocrvqa", "plotqa", "raven", "rendered_text", "robut_sqa", "robut_wikisql", "robut_wtq", "scienceqa", "screen2words", "st_vqa", "tabmwp", "tallyqa", "tat_qa", "textcaps", "textvqa", "tqa", "vistext", "visual7w", "visualmrc", "vqarad", "vqav2", "vsr", "websight") # "clevr_math", "okvqa", "spot_the_diff", "nlvr2", "mimic_cgd",

@@ -10,6 +10,8 @@ version = "0.1.0"
 [dependencies]
 python = "3.12.*"
 einops = ">=0.8.2,<0.9"
+gcc = ">=12.1.0"
+gxx = ">=12.1.0"
 
 [pypi-dependencies]
 torch = ">=2.10.0, <3"
