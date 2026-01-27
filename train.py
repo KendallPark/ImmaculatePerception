@@ -166,7 +166,7 @@ def train(train_cfg, vlm_cfg):
             run_name = run_name.replace("full_ds", f"{total_dataset_size}samples")
         run = wandb.init(
             entity=train_cfg.wandb_entity,
-            project="nanoVLM",
+            project=train_cfg.wandb_project,
             config={
                 "VLMConfig": asdict(vlm_cfg),
                 "TrainConfig": asdict(train_cfg)
