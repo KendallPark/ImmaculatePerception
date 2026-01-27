@@ -44,6 +44,7 @@ class TrainConfig:
     lr_backbones: float = 2e-4 # Scaled for batch_size 64
     data_cutoff_idx: int = None
     val_ratio: float = 0.1
+    val_max_samples: int = 4096
     batch_size: int = 64 # Increased for RTX 4090 (24GB VRAM)
     mmstar_batch_size: int = 64
     eval_in_epochs: bool = True

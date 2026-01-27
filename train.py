@@ -58,6 +58,8 @@ def get_dataloaders(train_cfg, vlm_cfg):
         total_samples = min(len(train_ds), train_cfg.data_cutoff_idx)
 
     val_size = int(total_samples * train_cfg.val_ratio)
+    if train_cfg.val_max_samples is not None:
+        val_size = min(val_size, train_cfg.val_max_samples)
     train_size = total_samples - val_size
 
     train_dataset = VQADataset(train_ds.select(range(train_size)), tokenizer, image_processor)
