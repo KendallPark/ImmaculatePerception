@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 torch.manual_seed(0)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(0)
+    # TF32 is enabled by default for matmul on Ampere+, but we can explicitly set it for cuDNN too if needed, though we use bfloat16.
+    # We will enforce it based on config later.
 
 from data.collators import VQACollator, MMStarCollator
 from data.datasets import MMStarDataset, VQADataset
@@ -45,7 +47,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
         train_ds = load_dataset(train_cfg.train_dataset_path, dataset_name)
         combined_train_data.append(train_ds['train'])
     train_ds = concatenate_datasets(combined_train_data)
-    
+
     test_ds = load_dataset(train_cfg.test_dataset_path)
     train_ds = train_ds.shuffle(seed=0) # Shuffle the training dataset, so train and val get equal contributions from all concatinated datasets
 
@@ -80,7 +82,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
         batch_size=train_cfg.batch_size,
         shuffle=True,
         collate_fn=vqa_collator,
-        num_workers=8,
+        num_workers=train_cfg.dataloader_num_workers,
         pin_memory=True,
         drop_last=True,
         worker_init_fn=seed_worker,
@@ -92,7 +94,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
         batch_size=train_cfg.batch_size,
         shuffle=False,
         collate_fn=vqa_collator,
-        num_workers=8,
+        num_workers=train_cfg.dataloader_num_workers,
         pin_memory=True,
         drop_last=True,
         worker_init_fn=seed_worker,
@@ -100,9 +102,9 @@ def get_dataloaders(train_cfg, vlm_cfg):
     )
 
     test_loader = DataLoader(
-        test_dataset, 
-        batch_size=train_cfg.mmstar_batch_size, 
-        shuffle=False, 
+        test_dataset,
+        batch_size=train_cfg.mmstar_batch_size,
+        shuffle=False,
         collate_fn=mmstar_collator,
         pin_memory=True,
         worker_init_fn=seed_worker,
@@ -121,14 +123,14 @@ def test_mmstar(model, tokenizer, test_loader, device):
             input_ids = batch['input_ids'].to(device)
             labels = batch['labels'].to(device)
             attention_mask = batch['attention_mask'].to(device)
-            
+
             correct_answer = tokenizer.batch_decode(labels, skip_special_tokens=True)
-            
+
             gen = model.generate(input_ids, image, attention_mask)
             model_output = tokenizer.batch_decode(gen, skip_special_tokens=True)
-            
+
             is_correct = utils.check_multiple_choice_with_regex(model_output, correct_answer)
-            
+
             total_examples += len(is_correct)
             if is_correct:
                 correct_predictions += sum(is_correct)
@@ -177,8 +179,8 @@ def train(train_cfg, vlm_cfg):
         model = VisionLanguageModel.from_pretrained(vlm_cfg.vlm_checkpoint_path)
     else:
         model = VisionLanguageModel(vlm_cfg, load_backbone=vlm_cfg.vlm_load_backbone_weights)
-    
-    print(f"nanoVLM initialized with {sum(p.numel() for p in model.parameters()):,} parameters") 
+
+    print(f"nanoVLM initialized with {sum(p.numel() for p in model.parameters()):,} parameters")
     print(f"Training summary: {len(train_loader.dataset)} samples, {len(train_loader)} batches/epoch, batch size {train_cfg.batch_size}")
     print(f"Validation summary: {len(val_loader.dataset)} samples, {len(val_loader)} batches/epoch, batch size {train_cfg.batch_size}")
 
@@ -190,6 +192,12 @@ def train(train_cfg, vlm_cfg):
     optimizer = optim.AdamW(param_groups)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if train_cfg.use_tf32 and torch.cuda.is_available():
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        print("TF32 enabled for Ampere+ GPUs")
+
     model.to(device)
     if train_cfg.compile:
         model = torch.compile(model)
