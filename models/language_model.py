@@ -134,12 +134,26 @@ class LanguageModelGroupedQueryAttention(nn.Module):
             attention_mask = (1.0 - attention_mask) * torch.finfo(q.dtype).min
 
         if self.sdpa:
-            y = torch.nn.functional.scaled_dot_product_attention(
-                q, k, v,
-                attn_mask=attention_mask,
-                dropout_p=self.dropout if self.training else 0.0,
-                is_causal=True # LM attention is causal (masked)
-            )
+            if attention_mask is not None:
+                # We cannot pass both is_causal=True and attn_mask on some backends (like MPS)
+                # So we manually create the causal mask and combine it
+                causal_mask = torch.full((T, T), float("-inf"), device=x.device, dtype=x.dtype).triu(1)
+                causal_mask = causal_mask.view(1, 1, T, T)
+                combined_mask = causal_mask + attention_mask
+
+                y = torch.nn.functional.scaled_dot_product_attention(
+                    q, k, v,
+                    attn_mask=combined_mask,
+                    dropout_p=self.dropout if self.training else 0.0,
+                    is_causal=False
+                )
+            else:
+                y = torch.nn.functional.scaled_dot_product_attention(
+                    q, k, v,
+                    attn_mask=None,
+                    dropout_p=self.dropout if self.training else 0.0,
+                    is_causal=True
+                )
         else:
             attn = torch.matmul(q, k.transpose(2, 3)) / math.sqrt(self.head_dim)
             causal_mask = torch.tril(torch.ones(T, T, device=x.device)).view(1, 1, T, T)

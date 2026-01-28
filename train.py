@@ -235,7 +235,7 @@ def train(train_cfg, vlm_cfg):
             optimizer.zero_grad()
 
             with torch.autocast(device_type='cuda', dtype=torch.bfloat16): # Set to float16 if your hardware doesn't support bfloat16ß
-                _, loss = model(input_ids, images, attention_mask=attention_mask, targets=labels)
+                loss, _ = model(input_ids, images, attention_mask=attention_mask, labels=labels)
                 loss = loss / train_cfg.gradient_accumulation_steps
 
             loss.backward()
@@ -284,7 +284,7 @@ def train(train_cfg, vlm_cfg):
                         attention_mask = batch["attention_mask"].to(device)
 
                         with torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16):
-                            _, loss = model(input_ids, images, attention_mask=attention_mask, targets=labels)
+                            loss, _ = model(input_ids, images, attention_mask=attention_mask, labels=labels)
 
                         total_val_loss += loss.item()
                     avg_val_loss = total_val_loss / len(val_loader)
