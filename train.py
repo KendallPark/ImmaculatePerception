@@ -84,7 +84,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
         batch_size=train_cfg.batch_size,
         shuffle=True,
         collate_fn=vqa_collator,
-        num_workers=train_cfg.dataloader_num_workers,
+        num_workers=train_cfg.train_dataloader_num_workers,
         pin_memory=True,
         drop_last=True,
         worker_init_fn=seed_worker,
@@ -98,12 +98,11 @@ def get_dataloaders(train_cfg, vlm_cfg):
         batch_size=train_cfg.batch_size,
         shuffle=False,
         collate_fn=vqa_collator,
-        num_workers=train_cfg.dataloader_num_workers,
+        num_workers=train_cfg.val_dataloader_num_workers,
         pin_memory=True,
         drop_last=True,
         worker_init_fn=seed_worker,
         generator=g,
-        persistent_workers=train_cfg.dataloader_persistent_workers,
     )
 
     test_loader = DataLoader(
@@ -120,13 +119,16 @@ def get_dataloaders(train_cfg, vlm_cfg):
 
     return train_loader, val_loader, test_loader
 
-def test_mmstar(model, tokenizer, test_loader, device):
+def test_mmstar(model, tokenizer, test_loader, device, use_grayscale=False):
     model.eval()
     total_examples = 0
     correct_predictions = 0
     with torch.no_grad():
         for batch in test_loader:
             image = batch['images'].to(device)
+            if use_grayscale:
+                gray = image[:, 0:1] * 0.299 + image[:, 1:2] * 0.587 + image[:, 2:3] * 0.114
+                image = gray.repeat(1, 3, 1, 1)
             image = (image - 0.5) / 0.5
             input_ids = batch['input_ids'].to(device)
             labels = batch['labels'].to(device)
@@ -219,9 +221,12 @@ def train(train_cfg, vlm_cfg):
         total_train_loss = 0
         total_tokens_processed = 0
 
-        for batch in train_loader:
+        for batch_idx, batch in enumerate(train_loader):
             batch_start_time = time.time()
             images = batch["image"].to(device)
+            if train_cfg.use_grayscale:
+                gray = images[:, 0:1] * 0.299 + images[:, 1:2] * 0.587 + images[:, 2:3] * 0.114
+                images = gray.repeat(1, 3, 1, 1)
             images = (images - 0.5) / 0.5
             input_ids = batch["input_ids"].to(device)
             labels = batch["labels"].to(device)
@@ -231,17 +236,27 @@ def train(train_cfg, vlm_cfg):
 
             with torch.autocast(device_type='cuda', dtype=torch.bfloat16): # Set to float16 if your hardware doesn't support bfloat16ß
                 _, loss = model(input_ids, images, attention_mask=attention_mask, targets=labels)
+                loss = loss / train_cfg.gradient_accumulation_steps
 
             loss.backward()
 
-            adj_lr_mp = get_lr(global_step, train_cfg.lr_mp, len(train_loader) * train_cfg.epochs)
-            adj_lr_backbones = get_lr(global_step, train_cfg.lr_backbones, len(train_loader) * train_cfg.epochs)
-            optimizer.param_groups[0]['lr'] = adj_lr_mp
-            optimizer.param_groups[1]['lr'] = adj_lr_backbones
+            if (batch_idx + 1) % train_cfg.gradient_accumulation_steps == 0 or (batch_idx + 1) == len(train_loader):
+                # Calculate total optimization steps for LR scheduler
+                total_optimization_steps = (len(train_loader) // train_cfg.gradient_accumulation_steps) * train_cfg.epochs
+                # Adjust if there are leftover batches that we step on
+                if len(train_loader) % train_cfg.gradient_accumulation_steps != 0:
+                     total_optimization_steps += train_cfg.epochs # Rough approximation or exact calculation depending on preference, simpler to stick to major steps for LR
 
-            optimizer.step()
+                adj_lr_mp = get_lr(global_step, train_cfg.lr_mp, total_optimization_steps)
+                adj_lr_backbones = get_lr(global_step, train_cfg.lr_backbones, total_optimization_steps)
+                optimizer.param_groups[0]['lr'] = adj_lr_mp
+                optimizer.param_groups[1]['lr'] = adj_lr_backbones
 
-            batch_loss = loss.item()
+                optimizer.step()
+                optimizer.zero_grad()
+                global_step += 1
+
+            batch_loss = loss.item() * train_cfg.gradient_accumulation_steps
             total_train_loss += batch_loss
 
             num_tokens = torch.sum(attention_mask).item() # Sum of attention mask gives number of tokens
@@ -256,10 +271,13 @@ def train(train_cfg, vlm_cfg):
                 model.eval()
 
                 with torch.no_grad():
-                    epoch_accuracy = test_mmstar(model, tokenizer, test_loader, device)
+                    epoch_accuracy = test_mmstar(model, tokenizer, test_loader, device, use_grayscale=train_cfg.use_grayscale)
                     total_val_loss = 0
                     for batch in val_loader:
                         images = batch["image"].to(device)
+                        if train_cfg.use_grayscale:
+                            gray = images[:, 0:1] * 0.299 + images[:, 1:2] * 0.587 + images[:, 2:3] * 0.114
+                            images = gray.repeat(1, 3, 1, 1)
                         images = (images - 0.5) / 0.5
                         input_ids = batch["input_ids"].to(device)
                         labels = batch["labels"].to(device)
@@ -286,7 +304,7 @@ def train(train_cfg, vlm_cfg):
                 run.log({"batch_loss": batch_loss,
                          "tokens_per_second": tokens_per_second}, step=global_step)
 
-            global_step += 1
+            # global_step is now incremented inside the accumulation block
 
         avg_train_loss = total_train_loss / len(train_loader)
 
@@ -311,7 +329,7 @@ def train(train_cfg, vlm_cfg):
     print(f"Average time per epoch: {avg_epoch_time:.2f}s")
     print(f"Average time per sample: {avg_time_per_sample:.4f}s")
 
-    accuracy = test_mmstar(model, tokenizer, test_loader, device)
+    accuracy = test_mmstar(model, tokenizer, test_loader, device, use_grayscale=train_cfg.use_grayscale)
     print(f"MMStar Accuracy: {accuracy:.4f}")
 
     if train_cfg.log_wandb:
@@ -326,6 +344,7 @@ def main():
     parser.add_argument('--lr_backbones', type=float, help='Learning rate for the backbones')
     parser.add_argument('--vlm_checkpoint_path', type=str, help='Path to the VLM checkpoint for loading or saving')
     parser.add_argument('--resume_from_vlm_checkpoint', type=bool, default=False, help='Resume training from VLM checkpoint specified by vlm_checkpoint_path (or default if not provided)')
+    parser.add_argument('--use_grayscale', action='store_true', help='Use grayscale images for training/eval')
 
     args = parser.parse_args()
 
@@ -338,6 +357,8 @@ def main():
         train_cfg.lr_backbones = args.lr_backbones
     if args.vlm_checkpoint_path is not None:
         vlm_cfg.vlm_checkpoint_path = args.vlm_checkpoint_path
+    if args.use_grayscale:
+        train_cfg.use_grayscale = True
 
     if args.resume_from_vlm_checkpoint and args.vlm_checkpoint_path is not None:
         train_cfg.resume_from_vlm_checkpoint = True

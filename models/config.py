@@ -40,19 +40,21 @@ class VLMConfig:
 
 @dataclass
 class TrainConfig:
-    lr_mp: float = 4e-3 # Scaled for batch_size 64
-    lr_backbones: float = 2e-4 # Scaled for batch_size 64
+    lr_mp: float = 2e-3
+    lr_backbones: float = 1e-4
     data_cutoff_idx: int = None
     val_ratio: float = 0.1
     val_max_samples: int = 4096
+    gradient_accumulation_steps: int = 4 # Gradient accumulation steps
     batch_size: int = 64 # Increased for RTX 4090 (24GB VRAM)
-    mmstar_batch_size: int = 64
+    mmstar_batch_size: int = 16
     eval_in_epochs: bool = True
-    epochs: int = 1
+    epochs: int = 5
     compile: bool = True
     use_tf32: bool = True # Enable TF32 for faster training on Ampere+ GPUs
-    dataloader_num_workers: int = 16 # Optimized for high-core CPUs (16 cores) common with 4090 builds
-    dataloader_prefetch_factor: int = 4
+    train_dataloader_num_workers: int = 8 # Optimized for high-core CPUs (16 cores) common with 4090 builds
+    val_dataloader_num_workers: int = 4
+    dataloader_prefetch_factor: int = 2
     dataloader_persistent_workers: bool = True
     resume_from_vlm_checkpoint: bool = False # Indicate if the training should be resumed from a checkpoint of the whole VLM or you want to start from scratch
     train_dataset_path: str = 'HuggingFaceM4/the_cauldron'
@@ -61,3 +63,4 @@ class TrainConfig:
     wandb_entity: str = "llm-lg" # Indicate the entity to log to in wandb
     wandb_project: str = "nanoVLM-test" # Project name for wandb logging
     log_wandb: bool = True
+    use_grayscale: bool = False
