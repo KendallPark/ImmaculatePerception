@@ -95,7 +95,7 @@ def get_dataloaders(train_cfg, vlm_cfg):
 
     val_loader = DataLoader(
         val_dataset,
-        batch_size=train_cfg.batch_size,
+        batch_size=train_cfg.batch_size // 4,  # Add this to avoid OOM
         shuffle=False,
         collate_fn=vqa_collator,
         num_workers=train_cfg.val_dataloader_num_workers,
@@ -192,7 +192,7 @@ def train(train_cfg, vlm_cfg):
 
     print(f"nanoVLM initialized with {sum(p.numel() for p in model.parameters()):,} parameters")
     print(f"Training summary: {len(train_loader.dataset)} samples, {len(train_loader)} batches/epoch, batch size {train_cfg.batch_size}")
-    print(f"Validation summary: {len(val_loader.dataset)} samples, {len(val_loader)} batches/epoch, batch size {train_cfg.batch_size}")
+    print(f"Validation summary: {len(val_loader.dataset)} samples, {len(val_loader)} batches/epoch, batch size {train_cfg.batch_size // 4}")
 
     # Define optimizer groups
     # Since we have pretrained vision and language backbones, but a newly initialized modality projection layer, it doesn't make sense to train them with the same learning rate
