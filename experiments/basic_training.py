@@ -1,0 +1,341 @@
+import torch
+import transformers as tr
+import datasets as hf_datasets
+from typing import Dict, Any, Union
+import glob
+from dataclasses import dataclass, field
+from torch.utils.data import DataLoader
+
+import models.config as config
+from models.vision_language_model import VisionLanguageModel
+from data.datasets import VQADataset, MMStarDataset
+from data.collators import VQACollator, MMStarCollator
+from data.processors import get_image_processor, get_tokenizer
+from experiments.experiment import Experiment
+from models.utils import check_multiple_choice_with_regex
+
+class MMStarCallback(tr.TrainerCallback):
+    def __init__(self, test_loader, tokenizer, device):
+        self.test_loader = test_loader
+        self.tokenizer = tokenizer
+        self.device = device
+
+    def on_evaluate(self, args, state, control, model, **kwargs):
+        # This calls the test_mmstar logic during evaluation
+        print("Running MMStar Evaluation...")
+        if model.training:
+             model.eval()
+
+        total_examples = 0
+        correct_predictions = 0
+
+        # Ensure model is on the right device
+        model.to(self.device)
+
+        with torch.no_grad():
+            for batch in self.test_loader:
+                image = batch['images'].to(self.device)
+                # Model handles grayscale and normalization now
+                input_ids = batch['input_ids'].to(self.device)
+                labels = batch['labels'].to(self.device)
+                attention_mask = batch['attention_mask'].to(self.device)
+
+                correct_answer = self.tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+                gen = model.generate(input_ids, image, attention_mask)
+                model_output = self.tokenizer.batch_decode(gen, skip_special_tokens=True)
+
+                is_correct = check_multiple_choice_with_regex(model_output, correct_answer)
+
+                total_examples += len(is_correct)
+                if is_correct:
+                    correct_predictions += sum(is_correct)
+
+        accuracy = correct_predictions / total_examples if total_examples > 0 else 0
+        print(f"MMStar Accuracy: {accuracy:.4f}")
+
+@dataclass
+class BasicTraining(Experiment):
+    """
+    Experiment that replicates the end-to-end training in config.py
+    but uses the Hugging Face Trainer for the training loop and automanagement.
+    All training configuration is self-contained in this experiment class.
+    """
+    # Training Hyperparameters
+    lr_mp: float = 2e-3
+    lr_backbones: float = 1e-4
+    epochs: int = 5
+    batch_size: int = 64
+    val_batch_size: int = 16
+    gradient_accumulation_steps: int = 4
+    mmstar_batch_size: int = 16
+
+    # Data Configuration
+    train_dataset_path: str = 'HuggingFaceM4/the_cauldron'
+    train_dataset_name: tuple[str, ...] = ("ai2d", "aokvqa", "chart2text", "chartqa", "clevr", "cocoqa", "datikz", "diagram_image_to_text", "docvqa", "dvqa", "figureqa", "finqa", "geomverse", "hateful_memes", "hitab", "iam", "iconqa", "infographic_vqa", "intergps", "localized_narratives", "mapqa", "multihiertt", "ocrvqa", "plotqa", "raven", "rendered_text", "robut_sqa", "robut_wikisql", "robut_wtq", "scienceqa", "screen2words", "st_vqa", "tabmwp", "tallyqa", "tat_qa", "textcaps", "textvqa", "tqa", "vistext", "visual7w", "visualmrc", "vqarad", "vqav2", "vsr", "websight")
+    test_dataset_path: str = "Lin-Chen/MMStar"
+    data_cutoff_idx: int = None
+    val_ratio: float = 0.1
+    val_max_samples: int = 4096
+
+    # System & Optimization
+    train_dataloader_num_workers: int = 8
+    val_dataloader_num_workers: int = 4
+    dataloader_prefetch_factor: int = 2
+    dataloader_persistent_workers: bool = True
+    use_tf32: bool = True
+    compile: bool = True
+
+    # Checkpointing & Resuming
+    resume_from_vlm_checkpoint: bool = False
+
+    # Logging
+    wandb_entity: str = "llm-lg"
+    wandb_project: str = "nanoVLM-test"
+    log_wandb: bool = True
+
+    # Other
+    # VLM Configuration (from VLMConfig)
+    vit_hidden_dim: int = 768
+    vit_inter_dim: int = 4 * 768
+    vit_patch_size: int = 16
+    vit_img_size: int = 224
+    vit_n_heads: int = 12
+    vit_dropout: float = 0.0
+    vit_n_blocks: int = 12
+    vit_ln_eps: float = 1e-6
+    vit_cls_flag: bool = False
+    vit_model_type: str = 'google/siglip-base-patch16-224'
+
+    lm_hidden_dim: int = 576
+    lm_inter_dim: int = 1536
+    lm_rms_eps: float = 1e-5
+    lm_re_base: int = 100000
+    lm_max_position_embeddings: int = 8192
+    lm_vocab_size: int = 49152
+    lm_n_heads: int = 9
+    lm_n_kv_heads: int = 3
+    lm_dropout: float = 0.0
+    lm_n_blocks: int = 30
+    lm_attn_scaling: float = 1.0
+    lm_max_length: int = 128 - 49
+    lm_use_tokens: bool = False
+    lm_tie_weights: bool = True
+    lm_model_type: str = 'HuggingFaceTB/SmolLM2-135M'
+    lm_tokenizer: str = 'HuggingFaceTB/cosmo2-tokenizer'
+    lm_eos_token_id: int = 0
+
+    mp_pixel_shuffle_factor: int = 2
+
+    vlm_load_backbone_weights: bool = True
+    vlm_checkpoint_path: str = 'checkpoints/nanoVLM-222M'
+
+    # Experiment Settings
+    eval_strategy: str = "steps" # "epoch" or "steps" or "no"
+    save_steps: int = 1000
+    eval_steps: int = 1000
+    use_grayscale: bool = True
+
+    # Seeds
+    model_seed: int = 42
+    data_seed: int = 42
+
+    def run(self):
+        print("Starting BasicTraining Experiment (HF Trainer)...")
+
+        # 1. Setup Configuration
+        # Reconstruct VLMConfig from experiment fields
+        vlm_cfg = config.VLMConfig(
+            vit_hidden_dim=self.vit_hidden_dim,
+            vit_inter_dim=self.vit_inter_dim,
+            vit_patch_size=self.vit_patch_size,
+            vit_img_size=self.vit_img_size,
+            vit_n_heads=self.vit_n_heads,
+            vit_dropout=self.vit_dropout,
+            vit_n_blocks=self.vit_n_blocks,
+            vit_ln_eps=self.vit_ln_eps,
+            vit_cls_flag=self.vit_cls_flag,
+            vit_model_type=self.vit_model_type,
+            lm_hidden_dim=self.lm_hidden_dim,
+            lm_inter_dim=self.lm_inter_dim,
+            lm_rms_eps=self.lm_rms_eps,
+            lm_re_base=self.lm_re_base,
+            lm_max_position_embeddings=self.lm_max_position_embeddings,
+            lm_vocab_size=self.lm_vocab_size,
+            lm_n_heads=self.lm_n_heads,
+            lm_n_kv_heads=self.lm_n_kv_heads,
+            lm_dropout=self.lm_dropout,
+            lm_n_blocks=self.lm_n_blocks,
+            lm_attn_scaling=self.lm_attn_scaling,
+            lm_max_length=self.lm_max_length,
+            lm_use_tokens=self.lm_use_tokens,
+            lm_tie_weights=self.lm_tie_weights,
+            lm_model_type=self.lm_model_type,
+            lm_tokenizer=self.lm_tokenizer,
+            lm_eos_token_id=self.lm_eos_token_id,
+            mp_pixel_shuffle_factor=self.mp_pixel_shuffle_factor,
+            vlm_load_backbone_weights=self.vlm_load_backbone_weights,
+            vlm_checkpoint_path=self.vlm_checkpoint_path
+        )
+
+        # 2. Prepare Data
+        print("Loading and combining datasets...")
+        combined_train_data = []
+        # Support both string and tuple for dataset names just in case
+        dataset_names = self.train_dataset_name
+        if isinstance(dataset_names, str):
+            dataset_names = [dataset_names]
+
+        for dataset_name in dataset_names:
+            print(f"Loading {dataset_name}...")
+            # We don't use streaming here as we want full training
+            train_ds = hf_datasets.load_dataset(self.train_dataset_path, dataset_name)
+            combined_train_data.append(train_ds['train'])
+
+        full_train_ds = hf_datasets.concatenate_datasets(combined_train_data)
+
+        # Shuffle with data_seed
+        full_train_ds = full_train_ds.shuffle(seed=self.data_seed)
+
+        # Cutoff if specified
+        if self.data_cutoff_idx is not None:
+             full_train_ds = full_train_ds.select(range(min(len(full_train_ds), self.data_cutoff_idx)))
+
+        # Split Train/Val
+        total_samples = len(full_train_ds)
+        val_size = int(total_samples * self.val_ratio)
+        if self.val_max_samples is not None:
+            val_size = min(val_size, self.val_max_samples)
+        train_size = total_samples - val_size
+
+        train_ds_split = full_train_ds.select(range(train_size))
+        val_ds_split = full_train_ds.select(range(train_size, total_samples))
+
+        # MMStar for Test
+        print("Loading MMStar dataset for eval...")
+        test_ds = hf_datasets.load_dataset(self.test_dataset_path)
+        mmstar_val = test_ds['val']
+
+        # 3. Processors
+        print("Setting up processors...")
+        image_processor = get_image_processor(vlm_cfg.vit_img_size)
+        tokenizer = get_tokenizer(vlm_cfg.lm_tokenizer)
+
+        # 4. Initialize Wrapper Datasets
+        print(f"Initializing Datasets (Train: {len(train_ds_split)}, Val: {len(val_ds_split)})...")
+        train_dataset = VQADataset(train_ds_split, tokenizer, image_processor)
+        val_dataset = VQADataset(val_ds_split, tokenizer, image_processor)
+        mmstar_dataset = MMStarDataset(mmstar_val, tokenizer, image_processor)
+
+        # 5. Initialize Model
+        print("Initializing Model...")
+        if self.resume_from_vlm_checkpoint:
+            model = VisionLanguageModel.from_pretrained(vlm_cfg.vlm_checkpoint_path)
+            model.use_grayscale = self.use_grayscale
+        else:
+            model = VisionLanguageModel(vlm_cfg, load_backbone=vlm_cfg.vlm_load_backbone_weights, use_grayscale=self.use_grayscale)
+
+        # 6. Collators
+        collate_fn = VQACollator(tokenizer, vlm_cfg.lm_max_length)
+        mmstar_collate_fn = MMStarCollator(tokenizer)
+
+        # 7. Training Arguments
+        # We map from self (Experiment config) to TrainingArguments
+        print("Setting up Training Arguments...")
+
+        # Check for FP16/BF16 support
+        bf16 = False
+        fp16 = False
+        if torch.cuda.is_available():
+            if torch.cuda.is_bf16_supported():
+                bf16 = True
+            else:
+                fp16 = True
+
+        training_args = tr.TrainingArguments(
+            output_dir="output/nanoVLM_basic_training",
+
+            # Batch size & accumulation
+            per_device_train_batch_size=self.batch_size,
+            gradient_accumulation_steps=self.gradient_accumulation_steps,
+            per_device_eval_batch_size=self.val_batch_size,
+
+            # Learning Rate
+            learning_rate=self.lr_mp,
+
+            # Epochs
+            num_train_epochs=self.epochs,
+
+            # Workers
+            dataloader_num_workers=self.train_dataloader_num_workers,
+            dataloader_pin_memory=True,
+            dataloader_persistent_workers=self.dataloader_persistent_workers,
+
+            # Precision
+            bf16=bf16,
+            fp16=fp16,
+            tf32=self.use_tf32 if torch.cuda.is_available() else False,
+
+            # Logging
+            report_to="wandb" if self.log_wandb else "none",
+            run_name=f"nanoVLM_basic_{self.epochs}ep",
+            logging_steps=10,
+
+            # Evaluation
+            eval_strategy=self.eval_strategy,
+            save_strategy=self.eval_strategy, # Sync save with eval usually, or could use "steps" explicitly
+            eval_steps=self.eval_steps,
+            save_steps=self.save_steps,
+            load_best_model_at_end=True,
+            metric_for_best_model="eval_loss",
+
+            remove_unused_columns=False, # Essential for VQA custom models
+            label_names=["labels"],
+            torch_compile=self.compile,
+
+            # Seeds
+            seed=self.model_seed,
+            data_seed=self.data_seed,
+        )
+
+        # 8. Setup Evaluation Callback (MMStar)
+        device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
+
+        # Test loader for callback
+        mmstar_loader = DataLoader(
+            mmstar_dataset,
+            batch_size=self.mmstar_batch_size,
+            shuffle=False,
+            collate_fn=mmstar_collate_fn
+        )
+
+        mmstar_callback = MMStarCallback(
+            test_loader=mmstar_loader,
+            tokenizer=tokenizer,
+            device=device,
+        )
+
+        # 9. Initialize Optimizer (Split parameter groups)
+        print("Initializing Optimizer with split learning rates...")
+        param_groups = [
+            {'params': model.MP.parameters(), 'lr': self.lr_mp},
+            {'params': list(model.decoder.parameters()) + list(model.vision_encoder.parameters()), 'lr': self.lr_backbones}
+        ]
+        # Use AdamW as per original implementation (or Trainer default)
+        optimizer = torch.optim.AdamW(param_groups)
+
+        # 10. Initialize Trainer
+        trainer = tr.Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=val_dataset,
+            data_collator=collate_fn,
+            callbacks=[mmstar_callback],
+            optimizers=(optimizer, None) # Pass optimizer, let Trainer create default scheduler
+        )
+
+        # 10. Run
+        print("Starting training...")
+        trainer.train()
+        print("Training complete.")

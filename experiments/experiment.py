@@ -58,7 +58,7 @@ class Experiment(abc.ABC):
           project=self.wandb_project,
           entity=self.wandb_entity,
           name=name,
-          config=self.params()
+          config={'exp_config': self.params()}
         )
       else:
         print("Warning: `wandb_project` is set, but `wandb` is not installed.")

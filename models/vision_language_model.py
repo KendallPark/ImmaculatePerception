@@ -16,9 +16,10 @@ import torch.nn.functional as F
 from safetensors.torch import load_model, save_model
 
 class VisionLanguageModel(nn.Module):
-    def __init__(self, cfg: VLMConfig, load_backbone=True):
+    def __init__(self, cfg: VLMConfig, load_backbone=True, use_grayscale=False):
         super().__init__()
         self.cfg = cfg
+        self.use_grayscale = use_grayscale
         if load_backbone:
             print("Loading from backbone weights")
             self.vision_encoder = ViT.from_pretrained(cfg)
@@ -30,6 +31,17 @@ class VisionLanguageModel(nn.Module):
         self.load_backbone = load_backbone
 
     def forward(self, input_ids, image, attention_mask=None, labels=None):
+        # 1. Grayscale (if enabled)
+        if self.use_grayscale:
+             # Optimized: avoid creating 3 sliced tensors. Use broadcasting.
+             # weights = torch.tensor([0.299, 0.587, 0.114], device=image.device).view(1, 3, 1, 1)
+             # gray = (image * weights).sum(dim=1, keepdim=True)
+             # Even simpler manual calc avoiding tensor creation overhead if jit is off:
+             gray = image[:, 0:1] * 0.299 + image[:, 1:2] * 0.587 + image[:, 2:3] * 0.114
+             image = gray.repeat(1, 3, 1, 1)
+             # Assert that all channels are identical (or at least 0 and 1 are)
+             assert torch.allclose(image[:, 0], image[:, 1], atol=1e-5), "Grayscale image channels should be identical"
+
         image_embd = self.vision_encoder(image)
         image_embd = self.MP(image_embd)
 
@@ -60,6 +72,12 @@ class VisionLanguageModel(nn.Module):
 
     @torch.no_grad()
     def generate(self, input_ids, image, attention_mask=None, max_new_tokens=5):
+        # 1. Grayscale (if enabled)
+        if self.use_grayscale:
+             gray = image[:, 0:1] * 0.299 + image[:, 1:2] * 0.587 + image[:, 2:3] * 0.114
+             image = gray.repeat(1, 3, 1, 1)
+             assert torch.allclose(image[:, 0], image[:, 1], atol=1e-5), "Grayscale image channels should be identical"
+
         # Process image through vision encoder and projection
         image_embd = self.vision_encoder(image)
         image_embd = self.MP(image_embd)
