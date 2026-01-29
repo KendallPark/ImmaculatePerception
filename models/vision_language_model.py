@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from safetensors.torch import load_model, save_model
 
 class VisionLanguageModel(nn.Module):
-    def __init__(self, cfg: VLMConfig, load_backbone=True, use_grayscale=False):
+    def __init__(self, cfg: VLMConfig, load_backbone=True, use_grayscale=False, freeze_vision=False):
         super().__init__()
         self.cfg = cfg
         self.use_grayscale = use_grayscale
@@ -29,6 +29,11 @@ class VisionLanguageModel(nn.Module):
             self.decoder = LanguageModel(cfg)
         self.MP = ModalityProjector(cfg)
         self.load_backbone = load_backbone
+
+        if freeze_vision:
+            print("Freezing Vision Encoder weights")
+            for param in self.vision_encoder.parameters():
+                param.requires_grad = False
 
     def forward(self, input_ids, image, attention_mask=None, labels=None):
         # 1. Grayscale (if enabled)

@@ -9,13 +9,20 @@ class ModalityProjector(nn.Module):
         self.output_dim = cfg.lm_hidden_dim
         self.scale_factor = cfg.mp_pixel_shuffle_factor
 
-        self.proj = nn.Linear(self.input_dim, self.output_dim, bias=False)
-        
+        if cfg.mp_use_mlp:
+            self.proj = nn.Sequential(
+                nn.Linear(self.input_dim, self.output_dim, bias=False),
+                nn.GELU(),
+                nn.Linear(self.output_dim, self.output_dim, bias=False)
+            )
+        else:
+            self.proj = nn.Linear(self.input_dim, self.output_dim, bias=False)
+
         self.apply(self._init_weights)
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            nn.init.normal_(self.proj.weight, mean=0.0, std=0.02)
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
 
@@ -30,11 +37,11 @@ class ModalityProjector(nn.Module):
         x = x.view(bsz, height, width, embed_dim)
         h_out = height // self.scale_factor
         w_out = width // self.scale_factor
-        
+
         x = x.reshape(bsz, h_out, self.scale_factor, w_out, self.scale_factor, embed_dim)
         x = x.permute(0, 1, 3, 2, 4, 5).contiguous()
         x = x.reshape(bsz, h_out * w_out, embed_dim * self.scale_factor**2)
-        
+
         return x
 
     def forward(self, x):
@@ -42,5 +49,3 @@ class ModalityProjector(nn.Module):
         x = self.proj(x)
 
         return x
-
-    

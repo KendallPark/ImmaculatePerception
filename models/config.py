@@ -33,6 +33,7 @@ class VLMConfig:
     lm_eos_token_id: int = 0
 
     mp_pixel_shuffle_factor: int = 2
+    mp_use_mlp: bool = False
 
     vlm_load_backbone_weights: bool = True
     vlm_checkpoint_path: str = 'checkpoints/nanoVLM-222M'

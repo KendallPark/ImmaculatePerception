@@ -71,10 +71,18 @@ class Experiment(abc.ABC):
     self.init_wandb()
     self.run()
 
+  @property
+  def run_name(self) -> str:
+    """
+    Returns a run name for logging (e.g. wandb).
+    Can be overridden by subclasses to include hyperparams.
+    """
+    return self.__class__.__name__
+
   @abc.abstractmethod
   def run(self):
     """
-    Contains the core logic of the experiment.
-    Subclasses must implement this method.
+    Run the experiment.
     """
     pass
+```

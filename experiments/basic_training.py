@@ -65,9 +65,9 @@ class BasicTraining(Experiment):
     lr_mp: float = 2e-3
     lr_backbones: float = 1e-4
     epochs: int = 5
-    batch_size: int = 64
+    batch_size: int = 128
     val_batch_size: int = 16
-    gradient_accumulation_steps: int = 4
+    gradient_accumulation_steps: int = 2
     mmstar_batch_size: int = 16
 
     # Data Configuration
@@ -126,6 +126,7 @@ class BasicTraining(Experiment):
     lm_eos_token_id: int = 0
 
     mp_pixel_shuffle_factor: int = 2
+    mp_use_mlp: bool = True
 
     vlm_load_backbone_weights: bool = True
     vlm_checkpoint_path: str = 'checkpoints/nanoVLM-222M'
@@ -135,13 +136,28 @@ class BasicTraining(Experiment):
     save_steps: int = 1000
     eval_steps: int = 1000
     use_grayscale: bool = True
+    freeze_vision: bool = True
 
     # Seeds
     model_seed: int = 42
     data_seed: int = 42
 
+    @property
+    def run_name(self) -> str:
+        name = "maryVLM"
+        name += f"_bs{self.batch_size * self.gradient_accumulation_steps}"
+        if self.freeze_vision:
+            name += "_frzvit"
+        if self.mp_use_mlp:
+            name += "_mlp"
+        if self.use_grayscale:
+            name += "_gray"
+        return name
+
     def run(self):
-        print("Starting BasicTraining Experiment (HF Trainer)...")
+        print("Starting BasicTraining Experiment...")
+        run_name = self.run_name
+        print(f"Run Name: {run_name}")
 
         # 1. Setup Configuration
         # Reconstruct VLMConfig from experiment fields
@@ -174,6 +190,7 @@ class BasicTraining(Experiment):
             lm_tokenizer=self.lm_tokenizer,
             lm_eos_token_id=self.lm_eos_token_id,
             mp_pixel_shuffle_factor=self.mp_pixel_shuffle_factor,
+            mp_use_mlp=self.mp_use_mlp,
             vlm_load_backbone_weights=self.vlm_load_backbone_weights,
             vlm_checkpoint_path=self.vlm_checkpoint_path
         )
@@ -232,8 +249,14 @@ class BasicTraining(Experiment):
         if self.resume_from_vlm_checkpoint:
             model = VisionLanguageModel.from_pretrained(vlm_cfg.vlm_checkpoint_path)
             model.use_grayscale = self.use_grayscale
+            # If resuming, we might still want to freeze if requested, though usually it's baked into architecture/intent.
+            # But let's respect the flag.
+            if self.freeze_vision:
+                 print("Freezing Vision Encoder weights (post-load)")
+                 for param in model.vision_encoder.parameters():
+                     param.requires_grad = False
         else:
-            model = VisionLanguageModel(vlm_cfg, load_backbone=vlm_cfg.vlm_load_backbone_weights, use_grayscale=self.use_grayscale)
+            model = VisionLanguageModel(vlm_cfg, load_backbone=vlm_cfg.vlm_load_backbone_weights, use_grayscale=self.use_grayscale, freeze_vision=self.freeze_vision)
 
         # 6. Collators
         collate_fn = VQACollator(tokenizer, vlm_cfg.lm_max_length)
@@ -253,7 +276,7 @@ class BasicTraining(Experiment):
                 fp16 = True
 
         training_args = tr.TrainingArguments(
-            output_dir="output/nanoVLM_basic_training",
+            output_dir=f"output/{run_name}",
 
             # Batch size & accumulation
             per_device_train_batch_size=self.batch_size,
@@ -278,7 +301,7 @@ class BasicTraining(Experiment):
 
             # Logging
             report_to="wandb" if self.log_wandb else "none",
-            run_name=f"nanoVLM_basic_{self.epochs}ep",
+            run_name=run_name,
             logging_steps=10,
 
             # Evaluation
@@ -317,9 +340,14 @@ class BasicTraining(Experiment):
 
         # 9. Initialize Optimizer (Split parameter groups)
         print("Initializing Optimizer with split learning rates...")
+
+        backbone_params = list(model.decoder.parameters())
+        if not self.freeze_vision:
+            backbone_params += list(model.vision_encoder.parameters())
+
         param_groups = [
             {'params': model.MP.parameters(), 'lr': self.lr_mp},
-            {'params': list(model.decoder.parameters()) + list(model.vision_encoder.parameters()), 'lr': self.lr_backbones}
+            {'params': backbone_params, 'lr': self.lr_backbones}
         ]
         # Use AdamW as per original implementation (or Trainer default)
         optimizer = torch.optim.AdamW(param_groups)
