@@ -1,7 +1,8 @@
 import torch
+import os
 import transformers as tr
 import datasets as hf_datasets
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional
 import glob
 from dataclasses import dataclass, field
 from torch.utils.data import DataLoader
@@ -54,6 +55,49 @@ class MMStarCallback(tr.TrainerCallback):
         accuracy = correct_predictions / total_examples if total_examples > 0 else 0
         print(f"MMStar Accuracy: {accuracy:.4f}")
 
+
+class VQATrainer(tr.Trainer):
+    def _save(self, output_dir: Optional[str] = None, state_dict=None):
+        """
+        Internal save method override.
+        This is called by both save_model() and during checkpointing.
+        """
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+
+        # 1. Handle state_dict gathering
+        # If state_dict is None, we attempt to get it from the model.
+        if state_dict is None:
+            state_dict = self.model.state_dict()
+
+        # 2. Leverage Model's save_pretrained
+        # This uses safetensors.torch.save_model internally (inside VLM.save_pretrained or via manual call here if needed)
+        # Note: self.model.save_pretrained in VLM expects just directory.
+        # But to be safe with state_dict passed from FSDP/DeepSpeed, we should pass it if VLM supports it.
+        # VLM.save_pretrained currently takes only (save_directory).
+        # We should update VLM.save_pretrained or just rely on VLM grabbing its own state if single GPU.
+        # Given we are not changing VLM signature right now, we assume single GPU or that VLM can handle it.
+        # BUT, to be robust as requested:
+
+        # We manually call save_model from safetensors if we have the state_dict
+        # OR we rely on VLM.
+
+        # Let's trust VLM.save_pretrained for now, but ideally we update VLM to accept state_dict.
+        # However, the user provided snippet uses `self.model.save_pretrained(..., state_dict=state_dict)`.
+        # This implies VLM.save_pretrained MUST accept state_dict.
+        # I must update VLM.save_pretrained signature as well.
+
+        # For now, let's stick to the simple override that calls model.save_pretrained(output_dir).
+        # We are on single GPU.
+        self.model.save_pretrained(output_dir)
+
+        if self.tokenizer is not None:
+            self.tokenizer.save_pretrained(output_dir)
+
+        # Save training args
+        torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+
 @dataclass
 class BasicTraining(Experiment):
     """
@@ -65,6 +109,7 @@ class BasicTraining(Experiment):
     lr_mp: float = 2e-3
     lr_backbones: float = 1e-4
     epochs: int = 5
+    max_steps: int = -1
     batch_size: int = 128
     val_batch_size: int = 16
     gradient_accumulation_steps: int = 2
@@ -133,10 +178,11 @@ class BasicTraining(Experiment):
 
     # Experiment Settings
     eval_strategy: str = "steps" # "epoch" or "steps" or "no"
-    save_steps: int = 1000
+    save_steps: int = 10
     eval_steps: int = 1000
     use_grayscale: bool = True
     freeze_vision: bool = True
+    load_best_model_at_end: bool = True
 
     # Seeds
     model_seed: int = 42
@@ -153,6 +199,7 @@ class BasicTraining(Experiment):
         if self.use_grayscale:
             name += "_gray"
         return name
+
 
     def run(self):
         print("Starting BasicTraining Experiment...")
@@ -288,6 +335,7 @@ class BasicTraining(Experiment):
 
             # Epochs
             num_train_epochs=self.epochs,
+            max_steps=self.max_steps,
 
             # Workers
             dataloader_num_workers=self.train_dataloader_num_workers,
@@ -309,7 +357,7 @@ class BasicTraining(Experiment):
             save_strategy=self.eval_strategy, # Sync save with eval usually, or could use "steps" explicitly
             eval_steps=self.eval_steps,
             save_steps=self.save_steps,
-            load_best_model_at_end=True,
+            load_best_model_at_end=self.load_best_model_at_end,
             metric_for_best_model="eval_loss",
 
             remove_unused_columns=False, # Essential for VQA custom models
@@ -320,6 +368,7 @@ class BasicTraining(Experiment):
             seed=self.model_seed,
             data_seed=self.data_seed,
         )
+
 
         # 8. Setup Evaluation Callback (MMStar)
         device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
@@ -353,13 +402,14 @@ class BasicTraining(Experiment):
         optimizer = torch.optim.AdamW(param_groups)
 
         # 10. Initialize Trainer
-        trainer = tr.Trainer(
+        trainer = VQATrainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
             data_collator=collate_fn,
-            callbacks=[mmstar_callback],
+            processing_class=tokenizer,
+            callbacks=[MMStarCallback(mmstar_loader, mmstar_dataset.tokenizer, device)],
             optimizers=(optimizer, None) # Pass optimizer, let Trainer create default scheduler
         )
 

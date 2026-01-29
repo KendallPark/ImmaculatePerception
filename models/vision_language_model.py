@@ -35,6 +35,25 @@ class VisionLanguageModel(nn.Module):
             for param in self.vision_encoder.parameters():
                 param.requires_grad = False
 
+    def get_input_embeddings(self):
+        return self.decoder.token_embedding
+
+    def set_input_embeddings(self, value):
+        self.decoder.token_embedding = value
+
+    def get_output_embeddings(self):
+        return self.decoder.head
+
+    def set_output_embeddings(self, new_embeddings):
+        self.decoder.head = new_embeddings
+
+    def tie_weights(self):
+        """
+        Tie the weights between the input embeddings and the output embeddings.
+        """
+        if self.cfg.lm_tie_weights:
+            self.decoder.head.weight = self.decoder.token_embedding.weight
+
     def forward(self, input_ids, image, attention_mask=None, labels=None):
         # 1. Grayscale (if enabled)
         if self.use_grayscale:
