@@ -63,7 +63,7 @@ class MMStarCallback(tr.TrainerCallback):
 
         # Log to WandB
         if wandb.run is not None:
-             wandb.log({"eval/mmstar_accuracy": accuracy, "global_step": state.global_step})
+             wandb.log({"eval/mmstar_accuracy": accuracy})
 
 
 class VQATrainer(tr.Trainer):
@@ -219,6 +219,10 @@ class BasicTraining(Experiment):
         print("Starting BasicTraining Experiment...")
         run_name = self.run_name
         print(f"Run Name: {run_name}")
+
+        # 0. Seed
+        if self.model_seed is not None:
+             tr.set_seed(self.model_seed)
 
         # 1. Setup Configuration
         # Reconstruct VLMConfig from experiment fields
@@ -504,7 +508,10 @@ class BasicTraining(Experiment):
             optimizers=(optimizer, None) # Pass optimizer, let Trainer create default scheduler
         )
 
-        # 10. Run
+        # 11. Evaluate
+        trainer.evaluate()
+
+        # 12. Run
         print("Starting training...")
         trainer.train()
         print("Training complete.")
