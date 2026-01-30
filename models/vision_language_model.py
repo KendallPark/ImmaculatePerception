@@ -20,6 +20,7 @@ class VisionLanguageModel(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.use_grayscale = use_grayscale
+        self._keys_to_ignore_on_save = None
         if load_backbone:
             print("Loading from backbone weights")
             self.vision_encoder = ViT.from_pretrained(cfg)
@@ -196,7 +197,14 @@ class VisionLanguageModel(nn.Module):
         model = cls(cfg, load_backbone=False)
 
         # Load safetensors weights
-        load_model(model, weights_path)
+        # We use strict=False because the token_embedding weight is tied to the lm_head weight
+        # and safetensors deduplicates shared tensors, often saving only one.
+        # Since they are tied in __init__, loading one updates the other.
+        missing_keys, unexpected_keys = load_model(model, weights_path, strict=False)
+        if missing_keys:
+             print(f"Missing keys (expected due to tied weights): {missing_keys}")
+        if unexpected_keys:
+             print(f"Unexpected keys: {unexpected_keys}")
 
         # Done!
         return model

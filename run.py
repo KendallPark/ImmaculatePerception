@@ -21,7 +21,7 @@ def main():
   (experiment,) = tr.HfArgumentParser(exp_class).parse_args_into_dataclasses(remaining_args)
 
   # Run the experiment
-  experiment.execute()
+  experiment.run()
 
 
 if __name__ == "__main__":

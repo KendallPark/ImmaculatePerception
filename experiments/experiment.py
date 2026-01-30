@@ -39,14 +39,9 @@ class Experiment(abc.ABC):
     """
     return dataclasses.asdict(self)
 
-  def init_wandb(self, name: Optional[str] = None):
+  def init_wandb(self):
     """
     Initializes Weights & Biases logging.
-
-    Logic:
-    1. If `debug` is True -> Do NOT log.
-    2. If `wandb` is not installed -> Warning and skip.
-    3. If `wandb_project` is set -> Initialize.
     """
     if self.debug:
       print("Debug mode enabled: WandB logging disabled.")
@@ -54,22 +49,18 @@ class Experiment(abc.ABC):
 
     if self.wandb_project:
       if wandb is not None:
+        # Check if run exists, if so finish it (essential for sequential runs)
+        if wandb.run is not None:
+            wandb.finish()
+
         wandb.init(
           project=self.wandb_project,
           entity=self.wandb_entity,
-          name=name,
+          name=self.run_name,
           config={'exp_config': self.params()}
         )
       else:
         print("Warning: `wandb_project` is set, but `wandb` is not installed.")
-
-  def execute(self):
-    """
-    Template method that initializes services (like WandB) and then runs the experiment.
-    Callers should invoke this method instead of `run()`.
-    """
-    self.init_wandb()
-    self.run()
 
   @property
   def run_name(self) -> str:
@@ -85,3 +76,15 @@ class Experiment(abc.ABC):
     Run the experiment.
     """
     pass
+
+
+def with_wandb(func):
+    """Decorator to ensure WandB is initialized before run and finished after."""
+    def wrapper(self, *args, **kwargs):
+        self.init_wandb()
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            if wandb is not None and wandb.run is not None:
+                wandb.finish()
+    return wrapper

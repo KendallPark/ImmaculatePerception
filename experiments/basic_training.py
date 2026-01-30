@@ -1,7 +1,13 @@
 import torch
 import os
+from PIL import Image, PngImagePlugin
+import torchvision.transforms as transforms
+# Increase PIL text chunk size limit to handle large metadata in datasets
+PngImagePlugin.MAX_TEXT_CHUNK = 200 * 1024 * 1024
+# Only import what we need or what was there
 import transformers as tr
 import datasets as hf_datasets
+import wandb
 from typing import Dict, Any, Union, Optional
 import glob
 from dataclasses import dataclass, field
@@ -12,7 +18,7 @@ from models.vision_language_model import VisionLanguageModel
 from data.datasets import VQADataset, MMStarDataset
 from data.collators import VQACollator, MMStarCollator
 from data.processors import get_image_processor, get_tokenizer
-from experiments.experiment import Experiment
+from experiments.experiment import Experiment, with_wandb
 from models.utils import check_multiple_choice_with_regex
 
 class MMStarCallback(tr.TrainerCallback):
@@ -55,6 +61,10 @@ class MMStarCallback(tr.TrainerCallback):
         accuracy = correct_predictions / total_examples if total_examples > 0 else 0
         print(f"MMStar Accuracy: {accuracy:.4f}")
 
+        # Log to WandB
+        if wandb.run is not None:
+             wandb.log({"eval/mmstar_accuracy": accuracy, "global_step": state.global_step})
+
 
 class VQATrainer(tr.Trainer):
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
@@ -91,8 +101,10 @@ class VQATrainer(tr.Trainer):
         # We are on single GPU.
         self.model.save_pretrained(output_dir)
 
-        if self.tokenizer is not None:
-            self.tokenizer.save_pretrained(output_dir)
+        # Save tokenizer/processing_class
+        processing_class = getattr(self, "processing_class", None) or getattr(self, "tokenizer", None)
+        if processing_class is not None:
+             processing_class.save_pretrained(output_dir)
 
         # Save training args
         torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
@@ -105,6 +117,18 @@ class BasicTraining(Experiment):
     but uses the Hugging Face Trainer for the training loop and automanagement.
     All training configuration is self-contained in this experiment class.
     """
+    # Experiment Settings
+    eval_strategy: str = "steps" # "epoch" or "steps" or "no"
+    save_steps: int = 1000
+    eval_steps: int = 1000
+    use_grayscale: bool = False
+    freeze_vision: bool = True
+    load_best_model_at_end: bool = True
+
+    # Seeds
+    model_seed: int = 42
+    data_seed: int = 42
+
     # Training Hyperparameters
     lr_mp: float = 2e-3
     lr_backbones: float = 1e-4
@@ -130,13 +154,15 @@ class BasicTraining(Experiment):
     dataloader_persistent_workers: bool = True
     use_tf32: bool = True
     compile: bool = True
+    image_resize_num_proc: int = 30
+    image_resize_batch_size: int = 100
 
     # Checkpointing & Resuming
     resume_from_vlm_checkpoint: bool = False
 
     # Logging
     wandb_entity: str = "llm-lg"
-    wandb_project: str = "nanoVLM-test"
+    wandb_project: str = "maryVLM_test"
     log_wandb: bool = True
 
     # Other
@@ -176,31 +202,19 @@ class BasicTraining(Experiment):
     vlm_load_backbone_weights: bool = True
     vlm_checkpoint_path: str = 'checkpoints/nanoVLM-222M'
 
-    # Experiment Settings
-    eval_strategy: str = "steps" # "epoch" or "steps" or "no"
-    save_steps: int = 10
-    eval_steps: int = 1000
-    use_grayscale: bool = True
-    freeze_vision: bool = True
-    load_best_model_at_end: bool = True
-
-    # Seeds
-    model_seed: int = 42
-    data_seed: int = 42
-
     @property
     def run_name(self) -> str:
         name = "maryVLM"
         name += f"_bs{self.batch_size * self.gradient_accumulation_steps}"
-        if self.freeze_vision:
-            name += "_frzvit"
-        if self.mp_use_mlp:
-            name += "_mlp"
         if self.use_grayscale:
             name += "_gray"
+        else:
+            name += "_rgb"
+        name += f"_ms{self.model_seed}_ds{self.data_seed}"
         return name
 
 
+    @with_wandb
     def run(self):
         print("Starting BasicTraining Experiment...")
         run_name = self.run_name
@@ -261,6 +275,49 @@ class BasicTraining(Experiment):
         # Shuffle with data_seed
         full_train_ds = full_train_ds.shuffle(seed=self.data_seed)
 
+        # Optimization: Pre-shrink images and remove unused columns to save memory/speed
+        # This map will rely on HF datasets caching. If the transform function/args don't change,
+        # it will load from cache file on disk (default load_from_cache_file=True).
+        print("Optimizing Dataset: Removing unused columns and resizing images...")
+
+        # 1. Filter columns
+        # We only need images and texts for VQADataset
+        columns_to_keep = ['images', 'texts']
+        # Check if dataset has them (it should, based on Cauldron)
+        current_cols = full_train_ds.column_names
+        # Sometimes connection issues happen, but we assume data is good
+        full_train_ds = full_train_ds.select_columns([c for c in columns_to_keep if c in current_cols])
+
+        # 2. Resize images
+        # We handle the fact that 'images' is a list.
+        # 2. Resize images
+        # We handle the fact that 'images' is a list.
+        def pre_process_images(examples, img_size):
+            # examples['images'] is a list of lists of PIL images
+            new_images_batch = []
+
+            for img_list in examples['images']:
+                new_list = []
+                for img in img_list:
+                    if isinstance(img, Image.Image):
+                         if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                         img = img.resize((img_size, img_size), resample=Image.BICUBIC)
+                    new_list.append(img)
+                new_images_batch.append(new_list)
+
+            return {'images': new_images_batch}
+        # Use num_proc to speed up. Caching ensures we only do this once per verified function state.
+        full_train_ds = full_train_ds.map(
+            pre_process_images,
+            fn_kwargs={'img_size': self.vit_img_size},
+            batched=True,
+            batch_size=self.image_resize_batch_size,
+            num_proc=self.image_resize_num_proc,
+            load_from_cache_file=True,
+            desc="Resizing images (Cached)"
+        )
+
         # Cutoff if specified
         if self.data_cutoff_idx is not None:
              full_train_ds = full_train_ds.select(range(min(len(full_train_ds), self.data_cutoff_idx)))
@@ -279,6 +336,40 @@ class BasicTraining(Experiment):
         print("Loading MMStar dataset for eval...")
         test_ds = hf_datasets.load_dataset(self.test_dataset_path)
         mmstar_val = test_ds['val']
+
+        # Optimization for MMStar
+        mmstar_cols = ['image', 'question', 'answer']
+        mmstar_val = mmstar_val.select_columns([c for c in mmstar_cols if c in mmstar_val.column_names])
+
+        def pre_process_mmstar(examples):
+            # examples['image'] is a list of PIL images (because batched=True)
+            # MMStar has single image per example
+            new_images = []
+
+
+
+        def pre_process_mmstar(examples, img_size):
+            # examples['image'] is a list of PIL images (because batched=True)
+            # MMStar has single image per example
+            new_images = []
+
+            for img in examples['image']:
+                if isinstance(img, Image.Image):
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    img = img.resize((img_size, img_size), resample=Image.BICUBIC)
+                new_images.append(img)
+            return {'image': new_images}
+
+        # Reduce validation worker count for map if on GPU too, just to be safe
+        mmstar_val = mmstar_val.map(
+            pre_process_mmstar,
+            fn_kwargs={'img_size': self.vit_img_size},
+            batched=True,
+            num_proc=self.val_dataloader_num_workers,
+            load_from_cache_file=True,
+            desc="Resizing MMStar"
+        )
 
         # 3. Processors
         print("Setting up processors...")
@@ -417,3 +508,85 @@ class BasicTraining(Experiment):
         print("Starting training...")
         trainer.train()
         print("Training complete.")
+
+@dataclass
+class ControlBasicTraining(BasicTraining):
+    wandb_project: str = "maryVLM"
+    # Training Args
+    eval_strategy: str = "steps" # "epoch" or "steps" or "no"
+    save_steps: int = 1000
+    eval_steps: int = 1000
+    use_grayscale: bool = False
+    freeze_vision: bool = True
+    load_best_model_at_end: bool = True
+
+    model_seed: int = 0
+    data_seed: int = 0
+
+    epochs: int = 4
+
+
+@dataclass
+class GrayscaleBasicTraining(ControlBasicTraining):
+    use_grayscale: bool = True
+
+@dataclass
+class RunBasicTraining(Experiment):
+
+    def run(self):
+        experiment = ControlBasicTraining()
+        experiment.run()
+
+        experiment = ControlBasicTraining(model_seed=1, data_seed=1)
+        experiment.run()
+
+        experiment = GrayscaleBasicTraining()
+        experiment.run()
+
+
+@dataclass
+class ModelLoadingTest(BasicTraining):
+    # Point to the specific checkpoint found
+    vlm_checkpoint_path: str = "/var/data/ImmaculatePerception/output/maryVLM_bs256_gray_ms0_ds0/checkpoint-19548"
+    resume_from_vlm_checkpoint: bool = True
+
+    # Disable training stuff
+    epochs: int = 0
+    max_steps: int = 0
+
+    def run(self):
+        print(f"Testing model loading from: {self.vlm_checkpoint_path}")
+
+        # Load Config
+        vlm_cfg = config.VLMConfig()
+
+        try:
+            # Attempt to load model
+            model = VisionLanguageModel.from_pretrained(self.vlm_checkpoint_path)
+            print("Success: Model loaded!")
+
+            # Move to device
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            model.to(device)
+            model.eval()
+
+            # Create dummy inputs for verification
+            print("Running dummy inference...")
+            dummy_image = torch.randn(1, 3, vlm_cfg.vit_img_size, vlm_cfg.vit_img_size).to(device)
+            dummy_input_ids = torch.randint(0, vlm_cfg.lm_vocab_size, (1, 10)).to(device)
+
+            with torch.no_grad():
+                # Test forward pass
+                loss, logits = model(dummy_input_ids, dummy_image)
+                print(f"Forward pass successful. Logits shape: {logits.shape}")
+
+                # Test generate
+                generated = model.generate(dummy_input_ids, dummy_image, max_new_tokens=5)
+                print(f"Generation successful. Output shape: {generated.shape}")
+
+            print("VERIFICATION COMPLETE: The model checkpoint is valid and functional.")
+
+        except Exception as e:
+            print(f"FAILED: Model loading or inference failed with error:")
+            print(e)
+            raise e
