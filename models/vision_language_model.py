@@ -226,12 +226,15 @@ class VisionLanguageModel(nn.Module):
         # Save weights as safetensors
         save_model(self, os.path.join(save_directory, "model.safetensors"))
 
-    def push_to_hub(self, repo_id: str, private: bool = False) -> None:
+    def push_to_hub(self, repo_id: str, private: bool = False, commit_message: str = None, extra_metadata: dict = None) -> None:
         """
         Push the model and configuration to the Hugging Face Hub.
 
         Args:
             repo_id (str): The repo ID on the Hugging Face Hub.
+            private (bool): Whether to make the repo private.
+            commit_message (str): Commit message for the upload.
+            extra_metadata (dict): Extra metadata to add to the model card.
         """
         from huggingface_hub import create_repo, upload_folder
 
@@ -244,16 +247,27 @@ class VisionLanguageModel(nn.Module):
             # Save to tmp directory
             self.save_pretrained(save_path)
 
+            # Prepare README content
+            readme_content = MODEL_CARD_TEMPLATE.format(repo_id=repo_id)
+
+            # Inject extra metadata if provided
+            if extra_metadata:
+                # Simple append for now, or could parse YAML.
+                # Let's just append a section for simplicity and safety.
+                readme_content += "\n\n## Training Metadata\n"
+                for k, v in extra_metadata.items():
+                    readme_content += f"- **{k}**: {v}\n"
+
             # Save model card
             with open(os.path.join(save_path, "README.md"), "w") as f:
-                f.write(MODEL_CARD_TEMPLATE.format(repo_id=repo_id))
+                f.write(readme_content)
 
             # Upload
             return upload_folder(
                 repo_id=repo_id,
                 repo_type="model",
                 folder_path=save_path,
-                commit_message="Upload nanoVLM using push_to_hub",
+                commit_message=commit_message or "Upload nanoVLM using push_to_hub",
             )
 
 

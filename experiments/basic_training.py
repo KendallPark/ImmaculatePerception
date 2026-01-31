@@ -552,6 +552,45 @@ class RunBasicTraining(Experiment):
 
 
 @dataclass
+class GrayscaleContinuedPretrainingOnColor(BasicTraining):
+    wandb_project: str = "maryVLM"
+    resume_from_vlm_checkpoint: bool = True
+    vlm_checkpoint_path: str = "output/maryVLM_bs256_gray_ms0_ds0/checkpoint-22000"
+    use_grayscale: bool = False
+    epochs: int = 1
+    model_seed: int = 0
+    data_seed: int = 0
+    lr_mp: float = 2e-3
+    lr_backbones: float = 1e-4
+    freeze_vision: bool = True
+    eval_strategy: str = "steps" # "epoch" or "steps" or "no"
+    save_steps: int = 250
+    eval_steps: int = 250
+
+
+    @property
+    def run_name(self) -> str:
+        name = self.vlm_checkpoint_path.replace("output/", "").replace("/checkpoint-", "_")
+        return f"{name}_cont_rgb_{self.epochs}_lr_mp{self.lr_mp}_lr_backbone{self.lr_backbones}"
+
+
+@dataclass
+class GrayscaleContinuedPretrainingOnColorBestLRs(Experiment):
+    def run(self):
+        # Modality Projector: From "Gentle Adjustment" (5e-4) to "Aggressive Re-alignment" (5e-3)
+        #lr_mp_values = [5e-4, 1e-3, 2e-3, 5e-3]
+        lr_mp_values = [1e-3, 2e-3]
+
+        # Backbone: From "Very Safe" (1e-5) to "Original Rate" (1e-4)
+        #lr_backbones_values = [1e-5, 2e-5, 5e-5, 1e-4]
+        lr_backbones_values = [2e-4, 5e-4]
+        for lr_mp in lr_mp_values:
+            for lr_backbones in lr_backbones_values:
+                experiment = GrayscaleContinuedPretrainingOnColor(lr_mp=lr_mp, lr_backbones=lr_backbones)
+                experiment.run()
+
+
+@dataclass
 class ModelLoadingTest(BasicTraining):
     # Point to the specific checkpoint found
     vlm_checkpoint_path: str = "/var/data/ImmaculatePerception/output/maryVLM_bs256_gray_ms0_ds0/checkpoint-19548"

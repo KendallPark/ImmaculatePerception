@@ -5,9 +5,13 @@ TOKENIZERS_CACHE = {}
 
 def get_tokenizer(name):
     if name not in TOKENIZERS_CACHE:
-        tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
-        tokenizer.pad_token = tokenizer.eos_token
-        TOKENIZERS_CACHE[name] = tokenizer
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True, local_files_only=True)
+        except Exception:
+            # Fallback if not cached
+            tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
+            tokenizer.pad_token = tokenizer.eos_token
+            TOKENIZERS_CACHE[name] = tokenizer
     return TOKENIZERS_CACHE[name]
 
 def get_image_processor(img_size):
