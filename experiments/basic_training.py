@@ -579,13 +579,19 @@ class GrayscaleContinuedPretrainingOnColorBestLRs(Experiment):
     def run(self):
         # Modality Projector: From "Gentle Adjustment" (5e-4) to "Aggressive Re-alignment" (5e-3)
         #lr_mp_values = [5e-4, 1e-3, 2e-3, 5e-3]
-        lr_mp_values = [1e-3, 2e-3]
+        lr_mp_values_old = [1e-3, 2e-3]
+        lr_mp_values = [5e-4, 1e-3, 2e-3, 5e-3]
 
         # Backbone: From "Very Safe" (1e-5) to "Original Rate" (1e-4)
         #lr_backbones_values = [1e-5, 2e-5, 5e-5, 1e-4]
-        lr_backbones_values = [2e-4, 5e-4]
+        lr_backbones_values_old = [2e-4, 5e-4]
+        lr_backbones_values = [1e-3, 2e-3, 5e-3]
         for lr_mp in lr_mp_values:
             for lr_backbones in lr_backbones_values:
+                if lr_mp in lr_mp_values_old and lr_backbones in lr_backbones_values_old:
+                    continue
+                if lr_mp == 5e-4 and lr_backbones == 1e-3:
+                    continue
                 experiment = GrayscaleContinuedPretrainingOnColor(lr_mp=lr_mp, lr_backbones=lr_backbones)
                 experiment.run()
 
