@@ -84,7 +84,7 @@ def main():
     files_to_upload = []
     for root, _, files in os.walk(args.checkpoint_path):
         for file in files:
-            if file in ["optimizer.pt", "rng_state.pth", "scheduler.pt", "training_args.bin"]:
+            if file in ["optimizer.pt", "rng_state.pth", "scheduler.pt"]:
                 continue
             abs_path = os.path.join(root, file)
             rel_path = os.path.relpath(abs_path, args.checkpoint_path)
