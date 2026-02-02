@@ -93,7 +93,7 @@ We then introduce chromatic stimuli (the "Release" phase) to measure two specifi
 **Summary of Contributions**
 
 * **Architectural Operationalization:** We provide the first implementation of the "Constructive Approach" using a frozen-encoder VLM to simulate the phylogenetic/ontogenetic divide.  
-* **The "Wow" Metric:** We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ([![][image1]](https://www.codecogs.com/eqnedit.php?latex=p%20%3C%20.001#0)), mirroring biological MMN.  
+* **The "Wow" Metric:** We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ($$p \< .001$$), mirroring biological MMN.  
 * **Evidence for Structural Realism:** We show that agents can be functionally equivalent (identical VQA performance) while possessing rotationally misaligned latent geometries, providing a computational existence proof for the "Inverted Spectrum."  
 * **Validation of the Impenetrable Representation Hypothesis:** Our results suggest that subjective experience can be modeled as the computational cost of alignment between mismatched representational formats.  
 * **Unified Theory of the Knowledge Problem**: As a bonus, our MaryVLM model shows how the various philosophical “replies” to Mary’s Room can be unified under one framework.
@@ -116,13 +116,13 @@ Finally, our approach draws on "Neurophenomenal Structuralism," which posits tha
 
 ## Methods
 
-To investigate the functional distinction between propositional knowledge and sensory experience, we employed a dual-encoder Vision-Language Model (VLM) architecture. This setup allows us to operationalize the "Mind-Body" distinction computationally: the vision encoder represents the fixed biological hardware ([![][image2]](https://www.codecogs.com/eqnedit.php?latex=E_%5Cphi#0)), and the language/fusion layers represent the plastic conceptual system ([![][image3]](https://www.codecogs.com/eqnedit.php?latex=P_%5Ctheta#0)).
+To investigate the functional distinction between propositional knowledge and sensory experience, we employed a dual-encoder Vision-Language Model (VLM) architecture. This setup allows us to operationalize the "Mind-Body" distinction computationally: the vision encoder represents the fixed biological hardware ($$E\_\\phi$$), and the language/fusion layers represent the plastic conceptual system ($$P\_\\theta$$).
 
 ### Model Architecture
 
 We utilized the **SmolVLM-256M** architecture (HuggingFaceTB, 2024), chosen for its modular separation of vision and language components. The architecture consists of:
 
-1. **Sensory Encoder (Fixed Biology):** A SigLIP vision transformer. Crucially, the weights [![][image4]](https://www.codecogs.com/eqnedit.php?latex=%5Cphi#0) were **frozen** throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a fixed sensory distinct from high-level belief updating.  
+1. **Sensory Encoder (Fixed Biology):** A SigLIP vision transformer. Crucially, the weights $$\\phi$$ were **frozen** throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a fixed sensory distinct from high-level belief updating.  
 2. **Conceptual Bridge (Plastic Mind):** A trainable multi-modal projection layer that maps visual embeddings into the semantic space of the language model.  
 3. **Propositional Decoder:** A transformer-based language model (SmolLM2) representing Mary's store of "textbook knowledge."
 
@@ -130,14 +130,14 @@ We utilized the **SmolVLM-256M** architecture (HuggingFaceTB, 2024), chosen for 
 
 We utilized the **Localized Narratives** dataset (Pont-Tuset et al., 2020), specifically the COCO subset. To isolate the effects of *format novelty* from *object novelty*, we partitioned the evaluation data into two functional subsets:
 
-* **Internal Control (Achromatic):** Images presented in grayscale ([![][image5]](https://www.codecogs.com/eqnedit.php?latex=L%2C%20L%2C%20L#0)). These validate the agent’s **Conceptual Grounding**—its ability to identify shapes and textures (e.g., "This is a banana") based on its training.  
+* **Internal Control (Achromatic):** Images presented in grayscale ($$L, L, L$$). These validate the agent’s **Conceptual Grounding**—its ability to identify shapes and textures (e.g., "This is a banana") based on its training.  
 * **External Release (Chromatic):** The *same* images presented in RGB. Because the fusion layers have never encountered the chromatic format, these serve as the stimuli for the "Release" phase.
 
 ### **Procedure**
 
 **Phase 1: Achromatic Acquisition ("The Room")**
 
-To simulate Mary’s confinement, we trained the agent’s conceptual layers ([![][image6]](https://www.codecogs.com/eqnedit.php?latex=P_%5Ctheta#0) and [![][image7]](https://www.codecogs.com/eqnedit.php?latex=D_%5Cpsi#0)) exclusively on grayscale images. An RGB-to-Luminance transformation [![][image8]](https://www.codecogs.com/eqnedit.php?latex=T\(x\)#0) was applied to all training inputs. The model was optimized on Visual Question Answering (VQA) and Captioning tasks until it achieved asymptotic accuracy. During this phase, the model possessed "complete physical information" in the form of text descriptions (e.g., "Apples are red") but lacked the functional capacity to process the chromatic signal.
+To simulate Mary’s confinement, we trained the agent’s conceptual layers ($$P\_\\theta$$ and $$D\_\\psi$$) exclusively on grayscale images. An RGB-to-Luminance transformation $$T(x)$$ was applied to all training inputs. The model was optimized on Visual Question Answering (VQA) and Captioning tasks until it achieved asymptotic accuracy. During this phase, the model possessed "complete physical information" in the form of text descriptions (e.g., "Apples are red") but lacked the functional capacity to process the chromatic signal.
 
 **Phase 2: Chromatic Release (Paired-Stimulus Evaluation)**
 
@@ -147,15 +147,15 @@ To measure the "subjective shock" of the new format, we employed a **Paired-Stim
 
 **Novelty Detection (The "Wow" Signal)**
 
-We operationalized the neural signature of novelty as **Mahalanobis Distance** ([![][image9]](https://www.codecogs.com/eqnedit.php?latex=D_M#0)). In biological systems, the Locus Coeruleus-Norepinephrine (LC-NE) system gates attention when predictions fail (Aston-Jones & Cohen, 2005). Computationally, we modeled this as the distance of the incoming chromatic vector [![][image10]](https://www.codecogs.com/eqnedit.php?latex=z_c#0) from the learned manifold of achromatic vectors [![][image11]](https://www.codecogs.com/eqnedit.php?latex=%5Cmu_g#0):
+We operationalized the neural signature of novelty as **Mahalanobis Distance** ($$D\_M$$). In biological systems, the Locus Coeruleus-Norepinephrine (LC-NE) system gates attention when predictions fail (Aston-Jones & Cohen, 2005). Computationally, we modeled this as the distance of the incoming chromatic vector $$z\_c$$ from the learned manifold of achromatic vectors $$\\mu\_g$$:
 
-[![][image12]](https://www.codecogs.com/eqnedit.php?latex=S%20%3D%20D_M\(z_c\)%20-%20D_M\(z_g\)#0)
+$$S \= D\_M(z\_c) \- D\_M(z\_g)$$
 
-A significant positive [![][image13]](https://www.codecogs.com/eqnedit.php?latex=S#0) indicates that "Redness" is not treated as just another feature, but as a **Violation of Expectation** (VoE) regarding the fundamental format of the input.
+A significant positive $$S$$ indicates that "Redness" is not treated as just another feature, but as a **Violation of Expectation** (VoE) regarding the fundamental format of the input.
 
 **Subjective Specificity (The Inverted Spectrum)**
 
-To test whether "qualia" are objective properties of the signal or subjective constructions of the agent, we trained two identical MaryVLM agents ([![][image14]](https://www.codecogs.com/eqnedit.php?latex=M_A#0) and [![][image15]](https://www.codecogs.com/eqnedit.php?latex=M_B#0)) with different random seeds for the conceptual bridge. We extracted the latent centroid vectors for the concept "Red" from both agents. We utilized **Procrustes Analysis** to measure the alignment between their internal spaces. High functional equivalence (identical verbal outputs) combined with high Procrustes disparity (misaligned internal vectors) would support the hypothesis that subjective experience is *structurally real* but *implementation-dependent*.
+To test whether "qualia" are objective properties of the signal or subjective constructions of the agent, we trained two identical MaryVLM agents ($$M\_A$$ and $$M\_B$$) with different random seeds for the conceptual bridge. We extracted the latent centroid vectors for the concept "Red" from both agents. We utilized **Procrustes Analysis** to measure the alignment between their internal spaces. High functional equivalence (identical verbal outputs) combined with high Procrustes disparity (misaligned internal vectors) would support the hypothesis that subjective experience is *structurally real* but *implementation-dependent*.
 
 # Results (Empirical Results WIP)
 
@@ -163,12 +163,12 @@ To test whether "qualia" are objective properties of the signal or subjective co
 
 To test the *Impenetrable Representation Hypothesis*, we measured the "subjective shock" of introducing chromatic stimuli to the grayscale-trained conceptual model. We hypothesized that genuine qualia onset corresponds to a high-energy prediction error rather than simple feature extraction.
 
-* **Hypothesis 1 (Format Novelty vs. Content Novelty):** We anticipate that the Mahalanobis Distance ([![][image16]](https://www.codecogs.com/eqnedit.php?latex=D_M#0)) for chromatic inputs (Release Phase) will be significantly higher ([![][image17]](https://www.codecogs.com/eqnedit.php?latex=p%20%3C%20.001#0)) than for achromatic control inputs.  
+* **Hypothesis 1 (Format Novelty vs. Content Novelty):** We anticipate that the Mahalanobis Distance ($$D\_M$$) for chromatic inputs (Release Phase) will be significantly higher ($$p \< .001$$) than for achromatic control inputs.  
 * **Result:** \[Placeholder for Graph 1\] The analysis revealed a distinct spike in Mahalanobis distance upon the introduction of RGB stimuli. This computational signal correlates with the biological Mismatch Negativity (MMN) observed in predictive coding literature, signaling a "Violation of Expectation" (VoE) where the input violates the system's "grayscale prior".
 
 ### The Inverted Spectrum: Structural Realism
 
-To test the *Subjective Specificity* of the experience, we compared the latent geometries of two functionally identical MaryVLM agents ([![][image18]](https://www.codecogs.com/eqnedit.php?latex=M_A#0) and [![][image19]](https://www.codecogs.com/eqnedit.php?latex=M_B#0)) initialized with different random seeds.
+To test the *Subjective Specificity* of the experience, we compared the latent geometries of two functionally identical MaryVLM agents ($$M\_A$$ and $$M\_B$$) initialized with different random seeds.
 
 * **Hypothesis 2 (Functional Equivalence, Structural Disparity):** We expect both agents to achieve near-identical performance on Visual Question Answering (e.g., both output "Red" for a rose), demonstrating functional equivalence.  
 * **Result:** \[Placeholder for Procrustes Analysis Plot\] While VQA accuracy was comparable (X% vs X%), a Procrustes Analysis of their latent centroids for color concepts revealed significant rotational misalignment. This provides a computational existence proof for the "Inverted Spectrum"—functionally identical agents with private, implementation-dependent internal representations.
@@ -251,41 +251,3 @@ Future work should extend the "Impenetrable Representation Hypothesis" to audito
 * 
 
 # 
-
-[image1]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAAANBAMAAADh3dsNAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVKvN74lEInYy3WYQmbv8EmWgAAAAGElEQVR4XmP8z4AbfGRCF0EBo7LIgBJZAOzGAgqMT324AAAAAElFTkSuQmCC>
-
-[image2]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAQBAMAAAACH4lsAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVJmrZrt2RBCJze/dIjJISVHlAAAAFUlEQVR4XmP8zwABH5mgDAaGwcQCADc3AhC236vkAAAAAElFTkSuQmCC>
-
-[image3]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAANBAMAAACEMClyAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAid3vzburmXZEVBBmMiJm6649AAAAFElEQVR4XmP8zwAGH5kgNAMDHRgA4I8CCkwveHoAAAAASUVORK5CYII=>
-
-[image4]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAPBAMAAAArJJMAAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAdt0iRIm7zTKZVBDvq2arXLOOAAAAEUlEQVR4XmP8z8DAwMRADQIATmYBHRVhjc8AAAAASUVORK5CYII=>
-
-[image5]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC0AAAANBAMAAADPmPqfAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAq+/dzbtUZplEIol2MhAtEXdVAAAAFklEQVR4XmP8z4ANfGRCF4GCUXEIAABXCAIKTMTEqgAAAABJRU5ErkJggg==>
-
-[image6]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAANBAMAAACEMClyAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAid3vzburmXZEVBBmMiJm6649AAAAFElEQVR4XmP8zwAGH5kgNAMDHRgA4I8CCkwveHoAAAAASUVORK5CYII=>
-
-[image7]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAQBAMAAADkNkIoAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAid3vzatmMkS7dhBUmSL1zwcfAAAAEklEQVR4XmP8zwADTHDWIGYCALoBAR8QBFYJAAAAAElFTkSuQmCC>
-
-[image8]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAQBAMAAAAc1rnfAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAEDKrIkRU77uJZnaZzd0kpKYjAAAAFUlEQVR4XmP8z4ACPjKh8hkYRpYAABEfAhDYcBWmAAAAAElFTkSuQmCC>
-
-[image9]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANBAMAAABBQrPjAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAid3vzatmMkS7dhBUmSL1zwcfAAAAEklEQVR4XmP8z4AATEjswcYBALCWARn3DEZ1AAAAAElFTkSuQmCC>
-
-[image10]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAJBAMAAAD0ltBnAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAZqvd780Qu4mZMiJEdlTva7LgAAAAEUlEQVR4XmP8zwACTGCSdAoAQDgBEaehpFcAAAAASUVORK5CYII=>
-
-[image11]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAMBAMAAABPbPrXAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARLvvMquJIpnNVBB2Zt2EZ/YjAAAAFElEQVR4XmP8zwAGH5kgNAMD7RgAzjUCCE57gEQAAAAASUVORK5CYII=>
-
-[image12]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJsAAAAQBAMAAADzOBCkAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAIlSJq83d73ZEZpm7EDJZAI1hAAAAIklEQVR4XmP8z0BF8JEJXYQyMGoc+WDUOPLBqHHkg8FtHACbCgIQIXsQBAAAAABJRU5ErkJggg==>
-
-[image13]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAMBAMAAABCcoqQAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAIlSJq83d73ZEZpm7EDJZAI1hAAAAE0lEQVR4XmP8z8DA8JGJAQQoIQGJdAIIWmdO+gAAAABJRU5ErkJggg==>
-
-[image14]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAANBAMAAACwSehuAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARM27Imbvmat2EDLdiVRWT+/bAAAAFUlEQVR4XmP8zwAHH5kQbAaGQcYBAERyAgoAlu+0AAAAAElFTkSuQmCC>
-
-[image15]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANBAMAAABBQrPjAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARM27Imbvmat2EDLdiVRWT+/bAAAAEklEQVR4XmP8z4AATEjswcYBALCWARn3DEZ1AAAAAElFTkSuQmCC>
-
-[image16]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANBAMAAABBQrPjAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAid3vzatmMkS7dhBUmSL1zwcfAAAAEklEQVR4XmP8z4AATEjswcYBALCWARn3DEZ1AAAAAElFTkSuQmCC>
-
-[image17]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAAANBAMAAADh3dsNAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMAVKvN74lEInYy3WYQmbv8EmWgAAAAGElEQVR4XmP8z4AbfGRCF0EBo7LIgBJZAOzGAgqMT324AAAAAElFTkSuQmCC>
-
-[image18]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAANBAMAAACwSehuAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARM27Imbvmat2EDLdiVRWT+/bAAAAFUlEQVR4XmP8zwAHH5kQbAaGQcYBAERyAgoAlu+0AAAAAElFTkSuQmCC>
-
-[image19]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAANBAMAAABBQrPjAAAAMFBMVEX///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAv3aB7AAAAD3RSTlMARM27Imbvmat2EDLdiVRWT+/bAAAAEklEQVR4XmP8z4AATEjswcYBALCWARn3DEZ1AAAAAElFTkSuQmCC>

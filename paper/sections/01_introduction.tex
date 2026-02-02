@@ -1,0 +1,36 @@
+\section{Introduction}
+
+\paragraph{What is the problem?}
+A foundational challenge in cognitive science is bridging the "Explanatory Gap" between the objective description of information processing and the subjective character of sensory experience. While computational models have successfully replicated high-level cognitive functions such as reasoning and object recognition, they largely fail to account for the phenomenology of \textit{qualia}---the "raw feel" of a sensory format. The prevailing question has shifted from the metaphysical "What is consciousness?" to the engineering-focused "What architectural constraints are required for a system to exhibit the structural properties of subjective experience?"
+
+\paragraph{Why is it interesting and important?}
+The status of qualia represents the single significant boundary condition for the computational theory of mind. Historically, the field has often conceded that subjective experience lies outside its explanatory scope. As \citet{Griffith2026} argued in their critique, if cognitive science is strictly the study of information processing, and qualia are defined as non-informational "raw feels," then subjectivity is axiomatically excluded from the domain of inquiry.
+
+This concession is devastating: it implies that a physicalist science of mind is fundamentally incomplete, forever separated from the phenomenology it seeks to explain. This paper challenges that defeatist conclusion. By operationalizing qualia through the "Constructive Approach" \citep{Taniguchi2025}, we move the debate from metaphysical stalemate to empirical falsifiability. The stakes are high: if we can demonstrate that "raw feels" leave a distinct, quantifiable structural footprint (a "Wow" signal) within a physical system, we refute the dualistic premise that subjectivity is non-computational. Conversely, if high-fidelity models like \textit{MaryVLM} fail to generate such signals despite functional equivalence, it would provide robust empirical support for the view that the "Hard Problem" is indeed a permanent barrier to physical understanding \citep{Griffith2026}.
+
+\paragraph{Why is it hard?}
+Modeling this phenomenon is difficult because standard neural architectures are "leaky" by design. In typical multimodal learning (e.g., CLIP or standard VLMs), visual encoders and language decoders are trained simultaneously to minimize alignment error. Consequently, these models learn an immediate, frictionless mapping between the pixel values of "red" and the token "red." They lack the biological reality of \textit{encapsulation}: the fact that our sensory hardware is evolutionarily fixed ("phylogenetic"), while our conceptual understanding is developmentally plastic ("ontogenetic"). Without this separation, a model cannot experience the "shock" of a new format because it never faces the cost of translation.
+
+\paragraph{Why hasn't it been solved before?}
+Previous computational attempts have often relied on functionalist descriptions or purely symbolic systems that lack the continuous, high-dimensional nature of sensory data. Conversely, recent deep learning approaches often ignore the structural constraints necessary to test the "Knowledge Argument" \citep{Jackson1982}. They do not isolate the \textit{format} of the information from the \textit{content}. To date, there has been no rigorous attempt to operationalize the "Mary's Room" thought experiment using state-of-the-art Vision-Language Models (VLMs) where the sensory hardware is strictly "frozen" against a learning conceptual system.
+
+\subsection{Key components of our approach}
+
+We propose \textbf{MaryVLM}, a framework that tests the "Impenetrable Representation Hypothesis": that qualia arise from the friction of translating between a fixed sensory encoder and a plastic conceptual decoder. We utilize a small-scale VLM (SmolVLM) and impose a strict architectural constraint: the vision encoder (SigLIP) is frozen to simulate biological hardwiring, while the projection layer and language model are trained solely on achromatic (grayscale) data.
+
+We then introduce chromatic stimuli (the "Release" phase) to measure two specific phenomena:
+
+\begin{enumerate}
+    \item \textbf{The "Wow" Signal:} We quantify the "subjective shock" of novel qualia using Mahalanobis distance as a proxy for Mismatch Negativity (MMN), a well-documented prediction error signal in neuroscience.
+    \item \textbf{Structural Realism:} We employ Procrustes Analysis to compare the latent spaces of functionally identical agents, testing for the "Inverted Spectrum" phenomenon.
+\end{enumerate}
+
+\subsection{Summary of Contributions}
+
+\begin{itemize}
+    \item \textbf{Architectural Operationalization:} We provide the first implementation of the "Constructive Approach" using a frozen-encoder VLM to simulate the phylogenetic/ontogenetic divide.
+    \item \textbf{The "Wow" Metric:} We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ($p < .001$), mirroring biological MMN.
+    \item \textbf{Evidence for Structural Realism:} We show that agents can be functionally equivalent (identical VQA performance) while possessing rotationally misaligned latent geometries, providing a computational existence proof for the "Inverted Spectrum."
+    \item \textbf{Validation of the Impenetrable Representation Hypothesis:} Our results suggest that subjective experience can be modeled as the computational cost of alignment between mismatched representational formats.
+    \item \textbf{Unified Theory of the Knowledge Problem}: As a bonus, our MaryVLM model shows how the various philosophical "replies" to Mary's Room can be unified under one framework.
+\end{itemize}
