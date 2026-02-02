@@ -15,9 +15,10 @@ from torch.utils.data import DataLoader
 
 import models.config as config
 from models.vision_language_model import VisionLanguageModel
-from data.datasets import VQADataset, MMStarDataset
+from data.datasets import VQADataset, MMStarDataset, ColorShapeDataset
 from data.collators import VQACollator, MMStarCollator
 from data.processors import get_image_processor, get_tokenizer
+from data.color_shape import create_color_shape_dataset_dict
 from experiments.experiment import Experiment, with_wandb
 from models.utils import check_multiple_choice_with_regex
 
@@ -214,6 +215,181 @@ class BasicTraining(Experiment):
         return name
 
 
+    def setup_processors(self, vlm_cfg):
+        """Initialize tokenizer and image processor."""
+        print("Setting up processors...")
+        image_processor = get_image_processor(vlm_cfg.vit_img_size)
+        tokenizer = get_tokenizer(vlm_cfg.lm_tokenizer)
+        return tokenizer, image_processor
+
+    def load_datasets(self, tokenizer, image_processor, vlm_cfg):
+        """Load and prepare training, validation, and MMStar datasets."""
+        # 2. Prepare Data
+        print("Loading and combining datasets...")
+        combined_train_data = []
+        # Support both string and tuple for dataset names just in case
+        dataset_names = self.train_dataset_name
+        if isinstance(dataset_names, str):
+            dataset_names = [dataset_names]
+
+        for dataset_name in dataset_names:
+            print(f"Loading {dataset_name}...")
+            # We don't use streaming here as we want full training
+            train_ds = hf_datasets.load_dataset(self.train_dataset_path, dataset_name)
+            combined_train_data.append(train_ds['train'])
+
+        full_train_ds = hf_datasets.concatenate_datasets(combined_train_data)
+
+        # Shuffle with data_seed
+        full_train_ds = full_train_ds.shuffle(seed=self.data_seed)
+
+        # Optimization: Pre-shrink images and remove unused columns to save memory/speed
+        # This map will rely on HF datasets caching. If the transform function/args don't change,
+        # it will load from cache file on disk (default load_from_cache_file=True).
+        print("Optimizing Dataset: Removing unused columns and resizing images...")
+
+        # 1. Filter columns
+        # We only need images and texts for VQADataset
+        columns_to_keep = ['images', 'texts']
+        # Check if dataset has them (it should, based on Cauldron)
+        current_cols = full_train_ds.column_names
+        # Sometimes connection issues happen, but we assume data is good
+        full_train_ds = full_train_ds.select_columns([c for c in columns_to_keep if c in current_cols])
+
+        # 2. Resize images
+        # We handle the fact that 'images' is a list.
+        def pre_process_images(examples, img_size):
+            # examples['images'] is a list of lists of PIL images
+            new_images_batch = []
+
+            for img_list in examples['images']:
+                new_list = []
+                for img in img_list:
+                    if isinstance(img, Image.Image):
+                         if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                         img = img.resize((img_size, img_size), resample=Image.BICUBIC)
+                    new_list.append(img)
+                new_images_batch.append(new_list)
+
+            return {'images': new_images_batch}
+
+        # Use num_proc to speed up. Caching ensures we only do this once per verified function state.
+        full_train_ds = full_train_ds.map(
+            pre_process_images,
+            fn_kwargs={'img_size': vlm_cfg.vit_img_size},
+            batched=True,
+            batch_size=self.image_resize_batch_size,
+            num_proc=self.image_resize_num_proc,
+            load_from_cache_file=True,
+            desc="Resizing images (Cached)"
+        )
+
+        # Cutoff if specified
+        if self.data_cutoff_idx is not None:
+             full_train_ds = full_train_ds.select(range(min(len(full_train_ds), self.data_cutoff_idx)))
+
+        # Split Train/Val
+        total_samples = len(full_train_ds)
+        val_size = int(total_samples * self.val_ratio)
+        if self.val_max_samples is not None:
+            val_size = min(val_size, self.val_max_samples)
+        train_size = total_samples - val_size
+
+        train_ds_split = full_train_ds.select(range(train_size))
+        val_ds_split = full_train_ds.select(range(train_size, total_samples))
+
+        # MMStar for Test
+        print("Loading MMStar dataset for eval...")
+        test_ds = hf_datasets.load_dataset(self.test_dataset_path)
+        mmstar_val = test_ds['val']
+
+        # Optimization for MMStar
+        mmstar_cols = ['image', 'question', 'answer']
+        mmstar_val = mmstar_val.select_columns([c for c in mmstar_cols if c in mmstar_val.column_names])
+
+        def pre_process_mmstar(examples, img_size):
+            # examples['image'] is a list of PIL images (because batched=True)
+            # MMStar has single image per example
+            new_images = []
+
+            for img in examples['image']:
+                if isinstance(img, Image.Image):
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                    img = img.resize((img_size, img_size), resample=Image.BICUBIC)
+                new_images.append(img)
+            return {'image': new_images}
+
+        # Reduce validation worker count for map if on GPU too, just to be safe
+        mmstar_val = mmstar_val.map(
+            pre_process_mmstar,
+            fn_kwargs={'img_size': vlm_cfg.vit_img_size},
+            batched=True,
+            num_proc=self.val_dataloader_num_workers,
+            load_from_cache_file=True,
+            desc="Resizing MMStar"
+        )
+
+        # Initialize Wrapper Datasets
+        print(f"Initializing Datasets (Train: {len(train_ds_split)}, Val: {len(val_ds_split)})...")
+        train_dataset = VQADataset(train_ds_split, tokenizer, image_processor)
+        val_dataset = VQADataset(val_ds_split, tokenizer, image_processor)
+        mmstar_dataset = MMStarDataset(mmstar_val, tokenizer, image_processor)
+
+        return train_dataset, val_dataset, mmstar_dataset
+
+    def get_trainer(self, model, args, train_dataset, eval_dataset, collator, processing_class, mmstar_dataset=None):
+        """Setup callbacks, optimizer, and return trainer instance."""
+
+        # 8. Setup Evaluation Callback (MMStar)
+        callbacks = []
+        if mmstar_dataset is not None:
+            device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
+
+            # Test loader for callback
+            mmstar_collate_fn = MMStarCollator(processing_class)
+            mmstar_loader = DataLoader(
+                mmstar_dataset,
+                batch_size=self.mmstar_batch_size,
+                shuffle=False,
+                collate_fn=mmstar_collate_fn
+            )
+
+            mmstar_callback = MMStarCallback(
+                test_loader=mmstar_loader,
+                tokenizer=processing_class,
+                device=device,
+            )
+            callbacks.append(mmstar_callback)
+
+        # 9. Initialize Optimizer (Split parameter groups)
+        print("Initializing Optimizer with split learning rates...")
+
+        backbone_params = list(model.decoder.parameters())
+        if not self.freeze_vision:
+            backbone_params += list(model.vision_encoder.parameters())
+
+        param_groups = [
+            {'params': model.MP.parameters(), 'lr': self.lr_mp},
+            {'params': backbone_params, 'lr': self.lr_backbones}
+        ]
+        # Use AdamW as per original implementation (or Trainer default)
+        optimizer = torch.optim.AdamW(param_groups)
+
+        # 10. Initialize Trainer
+        trainer = VQATrainer(
+            model=model,
+            args=args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            data_collator=collator,
+            processing_class=processing_class,
+            callbacks=callbacks,
+            optimizers=(optimizer, None) # Pass optimizer, let Trainer create default scheduler
+        )
+        return trainer
+
     @with_wandb
     def run(self):
         print("Starting BasicTraining Experiment...")
@@ -260,133 +436,13 @@ class BasicTraining(Experiment):
             vlm_checkpoint_path=self.vlm_checkpoint_path
         )
 
-        # 2. Prepare Data
-        print("Loading and combining datasets...")
-        combined_train_data = []
-        # Support both string and tuple for dataset names just in case
-        dataset_names = self.train_dataset_name
-        if isinstance(dataset_names, str):
-            dataset_names = [dataset_names]
+        # 2. Setup Processors
+        tokenizer, image_processor = self.setup_processors(vlm_cfg)
 
-        for dataset_name in dataset_names:
-            print(f"Loading {dataset_name}...")
-            # We don't use streaming here as we want full training
-            train_ds = hf_datasets.load_dataset(self.train_dataset_path, dataset_name)
-            combined_train_data.append(train_ds['train'])
+        # 3. Load Datasets
+        train_dataset, val_dataset, mmstar_dataset = self.load_datasets(tokenizer, image_processor, vlm_cfg)
 
-        full_train_ds = hf_datasets.concatenate_datasets(combined_train_data)
-
-        # Shuffle with data_seed
-        full_train_ds = full_train_ds.shuffle(seed=self.data_seed)
-
-        # Optimization: Pre-shrink images and remove unused columns to save memory/speed
-        # This map will rely on HF datasets caching. If the transform function/args don't change,
-        # it will load from cache file on disk (default load_from_cache_file=True).
-        print("Optimizing Dataset: Removing unused columns and resizing images...")
-
-        # 1. Filter columns
-        # We only need images and texts for VQADataset
-        columns_to_keep = ['images', 'texts']
-        # Check if dataset has them (it should, based on Cauldron)
-        current_cols = full_train_ds.column_names
-        # Sometimes connection issues happen, but we assume data is good
-        full_train_ds = full_train_ds.select_columns([c for c in columns_to_keep if c in current_cols])
-
-        # 2. Resize images
-        # We handle the fact that 'images' is a list.
-        # 2. Resize images
-        # We handle the fact that 'images' is a list.
-        def pre_process_images(examples, img_size):
-            # examples['images'] is a list of lists of PIL images
-            new_images_batch = []
-
-            for img_list in examples['images']:
-                new_list = []
-                for img in img_list:
-                    if isinstance(img, Image.Image):
-                         if img.mode != 'RGB':
-                            img = img.convert('RGB')
-                         img = img.resize((img_size, img_size), resample=Image.BICUBIC)
-                    new_list.append(img)
-                new_images_batch.append(new_list)
-
-            return {'images': new_images_batch}
-        # Use num_proc to speed up. Caching ensures we only do this once per verified function state.
-        full_train_ds = full_train_ds.map(
-            pre_process_images,
-            fn_kwargs={'img_size': self.vit_img_size},
-            batched=True,
-            batch_size=self.image_resize_batch_size,
-            num_proc=self.image_resize_num_proc,
-            load_from_cache_file=True,
-            desc="Resizing images (Cached)"
-        )
-
-        # Cutoff if specified
-        if self.data_cutoff_idx is not None:
-             full_train_ds = full_train_ds.select(range(min(len(full_train_ds), self.data_cutoff_idx)))
-
-        # Split Train/Val
-        total_samples = len(full_train_ds)
-        val_size = int(total_samples * self.val_ratio)
-        if self.val_max_samples is not None:
-            val_size = min(val_size, self.val_max_samples)
-        train_size = total_samples - val_size
-
-        train_ds_split = full_train_ds.select(range(train_size))
-        val_ds_split = full_train_ds.select(range(train_size, total_samples))
-
-        # MMStar for Test
-        print("Loading MMStar dataset for eval...")
-        test_ds = hf_datasets.load_dataset(self.test_dataset_path)
-        mmstar_val = test_ds['val']
-
-        # Optimization for MMStar
-        mmstar_cols = ['image', 'question', 'answer']
-        mmstar_val = mmstar_val.select_columns([c for c in mmstar_cols if c in mmstar_val.column_names])
-
-        def pre_process_mmstar(examples):
-            # examples['image'] is a list of PIL images (because batched=True)
-            # MMStar has single image per example
-            new_images = []
-
-
-
-        def pre_process_mmstar(examples, img_size):
-            # examples['image'] is a list of PIL images (because batched=True)
-            # MMStar has single image per example
-            new_images = []
-
-            for img in examples['image']:
-                if isinstance(img, Image.Image):
-                    if img.mode != 'RGB':
-                        img = img.convert('RGB')
-                    img = img.resize((img_size, img_size), resample=Image.BICUBIC)
-                new_images.append(img)
-            return {'image': new_images}
-
-        # Reduce validation worker count for map if on GPU too, just to be safe
-        mmstar_val = mmstar_val.map(
-            pre_process_mmstar,
-            fn_kwargs={'img_size': self.vit_img_size},
-            batched=True,
-            num_proc=self.val_dataloader_num_workers,
-            load_from_cache_file=True,
-            desc="Resizing MMStar"
-        )
-
-        # 3. Processors
-        print("Setting up processors...")
-        image_processor = get_image_processor(vlm_cfg.vit_img_size)
-        tokenizer = get_tokenizer(vlm_cfg.lm_tokenizer)
-
-        # 4. Initialize Wrapper Datasets
-        print(f"Initializing Datasets (Train: {len(train_ds_split)}, Val: {len(val_ds_split)})...")
-        train_dataset = VQADataset(train_ds_split, tokenizer, image_processor)
-        val_dataset = VQADataset(val_ds_split, tokenizer, image_processor)
-        mmstar_dataset = MMStarDataset(mmstar_val, tokenizer, image_processor)
-
-        # 5. Initialize Model
+        # 4. Initialize Model
         print("Initializing Model...")
         if self.resume_from_vlm_checkpoint:
             model = VisionLanguageModel.from_pretrained(vlm_cfg.vlm_checkpoint_path)
@@ -400,12 +456,11 @@ class BasicTraining(Experiment):
         else:
             model = VisionLanguageModel(vlm_cfg, load_backbone=vlm_cfg.vlm_load_backbone_weights, use_grayscale=self.use_grayscale, freeze_vision=self.freeze_vision)
 
-        # 6. Collators
+        # 5. Collators
         collate_fn = VQACollator(tokenizer, vlm_cfg.lm_max_length)
-        mmstar_collate_fn = MMStarCollator(tokenizer)
 
-        # 7. Training Arguments
-        # We map from self (Experiment config) to TrainingArguments
+        # 6. Training Arguments
+        # We setup training arguments
         print("Setting up Training Arguments...")
 
         # Check for FP16/BF16 support
@@ -464,54 +519,21 @@ class BasicTraining(Experiment):
             data_seed=self.data_seed,
         )
 
-
-        # 8. Setup Evaluation Callback (MMStar)
-        device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
-
-        # Test loader for callback
-        mmstar_loader = DataLoader(
-            mmstar_dataset,
-            batch_size=self.mmstar_batch_size,
-            shuffle=False,
-            collate_fn=mmstar_collate_fn
-        )
-
-        mmstar_callback = MMStarCallback(
-            test_loader=mmstar_loader,
-            tokenizer=tokenizer,
-            device=device,
-        )
-
-        # 9. Initialize Optimizer (Split parameter groups)
-        print("Initializing Optimizer with split learning rates...")
-
-        backbone_params = list(model.decoder.parameters())
-        if not self.freeze_vision:
-            backbone_params += list(model.vision_encoder.parameters())
-
-        param_groups = [
-            {'params': model.MP.parameters(), 'lr': self.lr_mp},
-            {'params': backbone_params, 'lr': self.lr_backbones}
-        ]
-        # Use AdamW as per original implementation (or Trainer default)
-        optimizer = torch.optim.AdamW(param_groups)
-
-        # 10. Initialize Trainer
-        trainer = VQATrainer(
+        # 7. Get Trainer
+        trainer = self.get_trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=val_dataset,
-            data_collator=collate_fn,
+            collator=collate_fn,
             processing_class=tokenizer,
-            callbacks=[MMStarCallback(mmstar_loader, mmstar_dataset.tokenizer, device)],
-            optimizers=(optimizer, None) # Pass optimizer, let Trainer create default scheduler
+            mmstar_dataset=mmstar_dataset
         )
 
-        # 11. Evaluate
+        # 8. Evaluate
         trainer.evaluate()
 
-        # 12. Run
+        # 9. Run
         print("Starting training...")
         trainer.train()
         print("Training complete.")

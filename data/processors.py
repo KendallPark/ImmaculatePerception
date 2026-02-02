@@ -8,10 +8,12 @@ def get_tokenizer(name):
         try:
             tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True, local_files_only=True)
         except Exception:
-            # Fallback if not cached
+            # Fallback if not cached locally
             tokenizer = AutoTokenizer.from_pretrained(name, use_fast=True)
+
+        if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
-            TOKENIZERS_CACHE[name] = tokenizer
+        TOKENIZERS_CACHE[name] = tokenizer
     return TOKENIZERS_CACHE[name]
 
 def get_image_processor(img_size):

@@ -127,6 +127,9 @@ class VisionLanguageModel(nn.Module):
         outputs = combined_embd
         generated_tokens = torch.zeros((batch_size, max_new_tokens), device=input_ids.device, dtype=input_ids.dtype)
 
+        eos_token_id = self.cfg.lm_eos_token_id
+        finished = torch.zeros(batch_size, dtype=torch.bool, device=input_ids.device)
+
         #Note: Here you could implement improvements like e.g. KV caching
         for i in range(max_new_tokens):
             model_out = self.decoder(outputs, attention_mask)
@@ -141,7 +144,17 @@ class VisionLanguageModel(nn.Module):
             probs = torch.softmax(last_token_logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)
 
+            # Check for EOS and update state
+            is_eos = (next_token.squeeze(-1) == eos_token_id)
+            finished = finished | is_eos
+
+            # For finished sequences, ensure we keep outputting EOS (padding)
+            next_token[finished] = eos_token_id
+
             generated_tokens[:, i] = next_token.squeeze(-1)
+
+            if finished.all():
+                break
 
             # Convert to embedding and append
             next_embd = self.decoder.token_embedding(next_token)
@@ -224,6 +237,16 @@ class VisionLanguageModel(nn.Module):
             f.write(json.dumps(asdict(self.cfg), indent=4))
 
         # Save weights as safetensors
+        # Handle shared weights for safetensors (token_embedding.weight and output.weight are often same)
+        state_dict = self.state_dict()
+
+        # Check if they really share memory and clone if necessary for saving
+        # Safetensors doesn't support shared memory
+        # We manually clone the output head weight if it's the same tensor object
+        if hasattr(self.decoder, 'head') and hasattr(self.decoder.token_embedding, 'weight'):
+             if self.decoder.head.weight is self.decoder.token_embedding.weight:
+                 state_dict['decoder.head.weight'] = state_dict['decoder.head.weight'].clone()
+
         save_model(self, os.path.join(save_directory, "model.safetensors"))
 
     def push_to_hub(self, repo_id: str, private: bool = False, commit_message: str = None, extra_metadata: dict = None) -> None:
