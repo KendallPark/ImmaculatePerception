@@ -1,28 +1,22 @@
 \section{Introduction}
 
-\subsection{Mary's Room}
+Qualia---the subjective, felt qualities of experience---remain ``central in philosophy of mind and one of the greatest obstacles in neuroscience'' \citep{Gouveia2022}. The redness of red, the painfulness of pain, the way coffee smells to you. These phenomena resist explanation in a way that threatens to place them outside scientific inquiry entirely. If qualia are truly ineffable, private, intrinsic, and directly apprehensible---as philosophers have claimed---then perhaps no physical account could ever capture them.
 
-Imagine a brilliant scientist named Mary who has spent her entire life in a black-and-white room. She has access to the world's complete scientific knowledge about color vision: the wavelengths of light, the neural pathways from retina to cortex, the physics of why the sky is blue and blood is red. Mary knows everything there is to know about color---propositionally.
+This paper argues otherwise. We propose that qualia only seem mysterious because we mistake hard architectural constraints for metaphysical ones.
 
-One day, the door opens and Mary steps outside. She sees a red rose for the first time.
+To make this case, we build a computational Mary. Jackson's \citeyearpar{Jackson1982} thought experiment imagines a scientist who knows everything about color but has never seen it. When she finally sees red, does she learn something new? The intuition that she does has fueled decades of debate about whether subjective experience escapes physical explanation.
 
-Does Mary learn something new?
-
-This thought experiment, introduced by \citet{Jackson1982}, poses a challenge to physicalism: if complete physical knowledge about color does not prepare Mary for the experience of \textit{seeing} red, then perhaps subjective experience---qualia---is something beyond the physical. The intuition is powerful. Mary knew the wavelength (700nm), knew which neurons would fire, knew she would say ``red.'' Yet something seems to \textit{happen} when she finally sees it. Something that all her propositional knowledge could not provide.
-
-This paper does not resolve the metaphysical debate. Instead, we ask a simpler question: \textbf{Can we build a Mary?}
-
-\subsection{A Computational Mary}
-
-We present \textbf{MaryVLM}, a Vision-Language Model trained exclusively on grayscale images. Like the thought experiment's Mary, our model acquires ``textbook knowledge'' about color: it learns that apples are red, the sky is blue, and bananas are yellow---all from text descriptions paired with achromatic images. The model can answer questions about color, reason about color relationships, and generate color-related text. It possesses propositional knowledge about color without ever having processed chromatic input.
-
-When we expose this grayscale-trained model to RGB images for the first time, we observe two phenomena:
+We present MaryVLM, a Vision-Language Model trained exclusively on grayscale images. Like Jackson's Mary, our model acquires propositional knowledge about color---it learns that apples are red and the sky is blue---without ever processing chromatic input. When we expose this model to color for the first time, we observe:
 
 \begin{enumerate}
-  \item \textbf{The ``Wow'' Signal}: The model's internal representations show a measurable ``surprise'' response---a spike in Mahalanobis distance that we interpret as a computational analog of Mismatch Negativity (MMN), the prediction error signal observed in biological brains when expectations are violated.
-
-  \item \textbf{The Inverted Spectrum}: When we train two identical model architectures with different random seeds, they achieve comparable functional performance (similar accuracy on VQA tasks) but develop structurally different internal representations of color. ``Red'' occupies different geometric positions in their latent spaces---a computational demonstration that functionally equivalent agents can have private, implementation-dependent qualia.
+    \item \textbf{The ``Wow'' Signal}: A measurable surprise response---a spike in Mahalanobis distance analogous to biological Mismatch Negativity---when chromatic input violates the system's learned grayscale prior.
+    \item \textbf{Learning Something New}: Continued training on chromatic input improves the model's performance on color-related tasks---demonstrating that exposure to a new sensory format confers new abilities, distinct from the immediate surprise of first contact.
+    \item \textbf{Structural Basis for the Inverted Spectrum}: Two models trained identically but with different random seeds achieve equivalent functional performance while developing structurally different internal representations of color---a computational demonstration that functionally equivalent agents can have private, implementation-dependent qualia.
 \end{enumerate}
+
+These findings demonstrate that the subjective character of qualia---the fact that novel formats feel like something, that my red might differ from yours---can emerge from information processing architecture.
+
+We then extend beyond our empirical results to propose RecurrentMaryVLM, a theoretical framework for understanding Dennett's four properties of qualia \citep{Dennett1988}. By analyzing a hypothetical architecture where a language model's output loops back as input---creating a recurrent ``inner speech'' system \citep{Vygotsky1986}---we show that ineffability, intrinsicality, privacy, and direct apprehensibility all arise from basic structural facts about where the self-reflective system sits relative to sensory representations.
 
 \subsection{What This Paper Is (and Is Not)}
 
@@ -30,25 +24,14 @@ We wish to be precise about our claims.
 
 \paragraph{This paper is not:}
 \begin{itemize}
-  \item A philosophical treatment of the Knowledge Argument or physicalism. However, we note that MaryVLM provides a unified framework for interpreting the various ``replies'' to Jackson's argument (see Discussion).
-  \item An attempt to explain how the brain works. We do not claim that biological brains are Vision-Language Models. Our architecture is a \textit{demonstration}, not a \textit{mechanism}.
-  \item A solution to the Hard Problem of consciousness. No philosophical zombies were slain in the making of this paper.
+    \item An attempt to explain how the brain works. We do not claim that biological brains are Vision-Language Models. Our architecture is a \textit{demonstration}, not a \textit{mechanism}.
+    \item A philosophical treatment of the Knowledge Argument or physicalism. However, we note that MaryVLM provides a unified framework for interpreting the various ``replies'' to Jackson's argument (see Discussion).
+    \item A solution to the Hard Problem of consciousness. We do not explain why there is something it is like to be a system that processes information. No philosophical zombies were slain in the making of this paper.
 \end{itemize}
 
 \paragraph{This paper is:}
 \begin{itemize}
-  \item A demonstration that the \textit{subjective} character of qualia---the fact that my ``red'' might differ from yours, that novel sensory formats feel like \textit{something}---can emerge from the structure of information processing in a physical system.
-  \item An empirical operationalization of Mary's Room using modern deep learning, with quantifiable metrics for ``surprise'' and ``subjectivity.''
-  \item An argument that subjectivity is not a mysterious extra ingredient, but an expected consequence of how information flows through systems with mismatched representational formats.
+    \item An empirical operationalization of Mary's Room using modern deep learning, with quantifiable metrics for ``surprise,'' ``learning,'' and ``subjectivity.''
+    \item A demonstration that the properties commonly attributed to qualia---their apparent ineffability, privacy, intrinsicality, and direct apprehensibility---can emerge from the structure of information processing in a physical system.
+    \item An argument that these properties are not mysterious extra ingredients, but expected consequences of architectural constraints.
 \end{itemize}
-
-
-
-\subsection{Contributions}
-
-\begin{enumerate}
-  \item We provide the first implementation of Mary's Room using a frozen-encoder VLM, creating a computational agent with propositional color knowledge but no chromatic experience.
-  \item We quantify the ``Wow'' signal ($S = D_M(z_{color}) - D_M(z_{gray})$) and show it is statistically significant across stimuli, analogous to biological Mismatch Negativity.
-  \item We demonstrate the Inverted Spectrum computationally: functionally equivalent agents with different random seeds have measurably different internal representations (high Procrustes disparity, moderate CKA).
-  \item We localize where qualia ``emerge'' in the processing hierarchy: the Modality Projector---the interface between fixed sensation and plastic conception---shows the strongest effects.
-\end{enumerate}
