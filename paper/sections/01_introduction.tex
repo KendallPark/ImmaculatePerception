@@ -24,21 +24,21 @@ What this paper is not:
 
 \end{comment}
 
-We propose \textbf{MaryVLM}, a framework that tests the "Impenetrable Representation Hypothesis": that qualia arise from the friction of translating between a fixed sensory encoder and a plastic conceptual decoder. We utilize the nanoVLM architecture and impose a strict architectural constraint: the vision encoder (SigLIP) is frozen to simulate biological hardwiring, while the projection layers and language model are trained solely on achromatic (grayscale) data.
+We propose \textbf{MaryVLM}, a framework for explaining the subjective nature of qualia. We hypothesize that qualia arise from the friction of translating between a fixed sensory encoder and a plastic conceptual decoder. We utilize the nanoVLM architecture and impose a strict architectural constraint: the vision encoder (SigLIP) is frozen to simulate biological hardwiring, while the projection layers and language model are trained solely on achromatic (grayscale) data.
 
 We then introduce chromatic stimuli (the "Release" phase) to measure two specific phenomena:
 
 \begin{enumerate}
-  \item \textbf{The "Wow" Signal:} We quantify the "subjective shock" of novel qualia using Mahalanobis distance as a proxy for Mismatch Negativity (MMN), a well-documented prediction error signal in neuroscience.
-  \item \textbf{Structural Realism:} We employ Procrustes Analysis to compare the latent spaces of functionally identical agents, testing for the "Inverted Spectrum" phenomenon.
+    \item \textbf{The "Wow" Signal:} We quantify the "subjective shock" of novel qualia using Mahalanobis distance as a proxy for Mismatch Negativity (MMN), a well-documented prediction error signal in neuroscience.
+    \item \textbf{Structural Realism:} We employ Procrustes Analysis to compare the latent spaces of functionally identical agents, testing for the "Inverted Spectrum" phenomenon.
 \end{enumerate}
 
 \subsection{Summary of Contributions}
 
 \begin{itemize}
-  \item \textbf{Architectural Operationalization:} We provide the first implementation of the "Constructive Approach" using a frozen-encoder VLM to simulate the phylogenetic/ontogenetic divide.
-  \item \textbf{The "Wow" Metric:} We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ($p < .001$), mirroring biological MMN.
-  \item \textbf{Evidence for Structural Realism:} We show that agents can be functionally equivalent (identical VQA performance) while possessing rotationally misaligned latent geometries, providing a computational existence proof for the "Inverted Spectrum."
-  \item \textbf{Validation of the Impenetrable Representation Hypothesis:} Our results suggest that subjective experience can be modeled as the computational cost of alignment between mismatched representational formats.
-  \item \textbf{Unified Theory of the Knowledge Problem}: As a bonus, our MaryVLM model shows how the various philosophical "replies" to Mary's Room can be unified under one framework.
+    \item \textbf{Architectural Operationalization:} We provide the first implementation of the "Constructive Approach" using a frozen-encoder VLM to simulate the phylogenetic/ontogenetic divide.
+    \item \textbf{The "Wow" Metric:} We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ($p < .001$), mirroring biological MMN.
+    \item \textbf{Evidence for Structural Realism:} We show that agents can be functionally equivalent (identical VQA performance) while possessing rotationally misaligned latent geometries, providing a computational existence proof for the "Inverted Spectrum."
+    \item \textbf{A Physicalist Account of Subjectivity:} Our results suggest that subjective experience can be modeled as the computational cost of alignment between mismatched representational formats.
+    \item \textbf{Unified Theory of the Knowledge Problem}: As a bonus, our MaryVLM model shows how the various philosophical "replies" to Mary's Room can be unified under one framework.
 \end{itemize}

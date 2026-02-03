@@ -7,7 +7,7 @@ To investigate the functional distinction between propositional knowledge and se
 We utilized the \textbf{nanoVLM} architecture, chosen for its modular separation of vision and language components. The architecture consists of:
 
 \begin{enumerate}
-  \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer. Crucially, the weights $\phi$ were \textbf{frozen} throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a fixed sensory distinct from high-level belief updating.
+  \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer. Crucially, the weights $\phi$ were \textbf{frozen} throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a more fixed sensory distinct from high-level belief updating. \cite{Pylyshyn1999}
   \item \textbf{Conceptual Bridge (Plastic Mind):} A trainable multi-modal projection consisting of two Multi-Layer Perceptrons (MLPs). These MLPs map visual embeddings into the semantic space of the language model and represent the plastic, learned interface between sensory data and conceptual knowledge.
   \item \textbf{Propositional Decoder:} A transformer-based language model (SmolLM2-135M) representing Mary's store of ``textbook knowledge.''
 \end{enumerate}
@@ -41,7 +41,7 @@ We utilized the \textbf{The Cauldron} dataset (HuggingFaceM4/the\_cauldron), a d
 To simulate Mary’s confinement, we trained the agent’s conceptual layers ($P_\theta$ and $D_\psi$) exclusively on grayscale images. An RGB-to-Luminance transformation $T(x)$ was applied to all training inputs. The model was optimized on Visual Question Answering (VQA) and Captioning tasks until it achieved asymptotic accuracy. During this phase, the model possessed "complete physical information" in the form of text descriptions (e.g., "Apples are red") but lacked the functional capacity to process the chromatic signal.
 
 \paragraph{Phase 2: Chromatic Release (Paired-Stimulus Evaluation)}
-To measure the "subjective shock" of the new format, we employed a \textbf{Paired-Stimulus Design}. We presented the model with identical images in both the Internal (Achromatic) and External (Chromatic) conditions. We hypothesized that if the \textit{Impenetrable Representation Hypothesis} is correct, the Chromatic condition should trigger a high-energy "surprise" signal, distinct from the low-energy state of recognizing the object in grayscale.
+To measure the "subjective shock" of the new format, we employed a \textbf{Paired-Stimulus Design}. We presented the model with identical images in both the Internal (Achromatic) and External (Chromatic) conditions. We hypothesized that the Chromatic condition should trigger a high-energy "surprise" signal, distinct from the low-energy state of recognizing the object in grayscale.
 
 \subsection{Measures}
 
