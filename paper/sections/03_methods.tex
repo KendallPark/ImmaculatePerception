@@ -4,12 +4,12 @@ To investigate the functional distinction between propositional knowledge and se
 
 \subsection{Model Architecture}
 
-We utilized the \textbf{SmolVLM-256M} architecture \citep{HuggingFaceTB2024}, chosen for its modular separation of vision and language components. The architecture consists of:
+We utilized the \textbf{nanoVLM} architecture, chosen for its modular separation of vision and language components. The architecture consists of:
 
 \begin{enumerate}
-    \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer. Crucially, the weights $\phi$ were \textbf{frozen} throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a fixed sensory distinct from high-level belief updating.
-    \item \textbf{Conceptual Bridge (Plastic Mind):} A trainable multi-modal projection layer that maps visual embeddings into the semantic space of the language model.
-    \item \textbf{Propositional Decoder:} A transformer-based language model (SmolLM2) representing Mary's store of "textbook knowledge."
+  \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer. Crucially, the weights $\phi$ were \textbf{frozen} throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a fixed sensory distinct from high-level belief updating.
+  \item \textbf{Conceptual Bridge (Plastic Mind):} A trainable multi-modal projection consisting of two Multi-Layer Perceptrons (MLPs). These MLPs map visual embeddings into the semantic space of the language model and represent the plastic, learned interface between sensory data and conceptual knowledge.
+  \item \textbf{Propositional Decoder:} A transformer-based language model (SmolLM2-135M) representing Mary's store of ``textbook knowledge.''
 \end{enumerate}
 
 \begin{figure}[t]
@@ -28,11 +28,11 @@ We utilized the \textbf{SmolVLM-256M} architecture \citep{HuggingFaceTB2024}, ch
 
 \subsection{Stimuli and Data Partitions}
 
-We utilized the \textbf{Localized Narratives} dataset \citep{PontTuset2020}, specifically the COCO subset. To isolate the effects of \textit{format novelty} from \textit{object novelty}, we partitioned the evaluation data into two functional subsets:
+We utilized the \textbf{The Cauldron} dataset (HuggingFaceM4/the\_cauldron), a diverse collection of vision-language tasks for training. For evaluation, we employed the \textbf{MMStar} benchmark (Lin-Chen/MMStar), a comprehensive VQA test set designed to assess multimodal reasoning capabilities. We partitioned the evaluation data into two functional subsets:
 
 \begin{itemize}
-    \item \textbf{Internal Control (Achromatic):} Images presented in grayscale ($L, L, L$). These validate the agent’s \textbf{Conceptual Grounding}---its ability to identify shapes and textures (e.g., "This is a banana") based on its training.
-    \item \textbf{External Release (Chromatic):} The \textit{same} images presented in RGB. Because the fusion layers have never encountered the chromatic format, these serve as the stimuli for the "Release" phase.
+  \item \textbf{Internal Control (Achromatic):} Images presented in grayscale ($L, L, L$). These validate the agent’s \textbf{Conceptual Grounding}---its ability to identify shapes and textures (e.g., "This is a banana") based on its training.
+  \item \textbf{External Release (Chromatic):} The \textit{same} images presented in RGB. Because the fusion layers have never encountered the chromatic format, these serve as the stimuli for the "Release" phase.
 \end{itemize}
 
 \subsection{Procedure}
@@ -49,7 +49,7 @@ To measure the "subjective shock" of the new format, we employed a \textbf{Paire
 We operationalized the neural signature of novelty as \textbf{Mahalanobis Distance} ($D_M$). In biological systems, the Locus Coeruleus-Norepinephrine (LC-NE) system gates attention when predictions fail \citep{AstonJones2005}. Computationally, we modeled this as the distance of the incoming chromatic vector $z_c$ from the learned manifold of achromatic vectors $\mu_g$:
 
 \begin{equation}
-S = D_M(z_c) - D_M(z_g)
+  S = D_M(z_c) - D_M(z_g)
 \end{equation}
 
 A significant positive $S$ indicates that "Redness" is not treated as just another feature, but as a \textbf{Violation of Expectation} (VoE) regarding the fundamental format of the input.
