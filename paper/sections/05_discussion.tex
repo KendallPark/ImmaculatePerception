@@ -32,30 +32,49 @@ Our framework suggests that qualia emerge from a specific architectural pattern:
     \small
     \begin{tabular}{@{}lll@{}}
         \hline
-        \textbf{Component} & \textbf{Name}         & \textbf{Role}                    \\
+        \textbf{Component} & \textbf{Name}                        & \textbf{Role}              \\
         \hline
-        Vision Encoder     & Sensory Encoder       & Fixed hardware (format-specific) \\
-        MLPs               & Conceptual Bridge     & Format translation interface     \\
-        Language Model     & Propositional Decoder & ``Knowing that'' vs. experience  \\
+        Vision Encoder     & Sensory Encoder (Fixed Biology)      & Phylogenetic hardware      \\
+        MLPs               & Modality Projector (Gain Interface)  & Tunable format translation \\
+        Language Model     & Propositional Decoder (Plastic Mind) & Ontogenetic software       \\
         \hline
     \end{tabular}
     \caption{MaryVLM components and their philosophical roles.}
     \label{tab:architecture}
 \end{table*}
 
-The key constraint is the \textbf{asymmetry} between these components: the Sensory Encoder is frozen (phylogenetic), while the Conceptual Bridge and Propositional Decoder are plastic (ontogenetic). This asymmetry creates the conditions for qualia:
+The key insight is that these components exist on a \textbf{spectrum of plasticity}, not a binary frozen/trainable distinction:
 
-\begin{enumerate}
-    \item The Sensory Encoder produces representations in a format determined by its fixed weights.
-    \item The Conceptual Bridge learns to translate this format into language space---but only for formats it has seen during training.
-    \item When a novel format arrives (chromatic input), the Bridge faces an unexpected translation cost---the ``Wow'' signal.
-\end{enumerate}
+\paragraph{Phylogenetic Processing (Relatively Fixed)}
+The Sensory Encoder represents evolutionarily-determined processing---structures like cone cells, color-opponent channels, and V1 organization that are largely determined by genetics. In our model, we freeze these weights to simulate their relative fixity. However, ``phylogenetic'' does not mean ``frozen.'' Studies of color-deficient corrective glasses show that even ``hardcoded'' visual hardware can be modulated. \citet{MartinezDomingo2019} found that EnChroma glasses do not restore normal color vision but rather shift the stimulus to increase chromatic contrast, allowing existing hardware to better differentiate signals that previously appeared identical. The hardware itself does not change; the input is transformed.
 
-Subjectivity arises because different agents (different random seeds) develop different Conceptual Bridges. They translate the same Sensory Encoding into different geometric arrangements in language space. The input is objective; the translation is subjective.
+\paragraph{Ontogenetic Processing (Plastic Mind)}
+The Language Model represents knowledge acquired through experience---language, concepts, and associations learned during development and life. This system is highly plastic, continuously updated by experience. Mary's ``textbook knowledge'' about color resides here.
+
+\paragraph{The Gain Interface (Blurred Boundary)}
+The Modality Projector represents a critical intermediate layer---the interface where phylogenetic signals are translated into ontogenetic representations. Crucially, \citet{Rabin2020} found that after anomalous trichromats wore color-corrective filters for two weeks, they showed improved chromatic responses \textit{even when not wearing the glasses}. This suggests the adult visual system retains plasticity at this interface: the ``hardcoded'' pathways remain, but the gain or weighting between sensory input and conceptual processing can be re-tuned when provided with high-contrast signals previously missing.
+
+In MaryVLM, this corresponds to the Modality Projector---trainable layers that learn to amplify, suppress, or transform specific dimensions of the sensory manifold. The ``Wow'' signal is strongest at this interface precisely because it is where format translation occurs.
+
+\begin{table*}[t]
+    \centering
+    \small
+    \begin{tabular}{@{}llll@{}}
+        \hline
+        \textbf{Layer} & \textbf{Component}                   & \textbf{Plasticity} & \textbf{Biological Analog}          \\
+        \hline
+        Phylogenetic   & Sensory Encoder                      & Relatively fixed    & Cones, V1, color-opponent channels  \\
+        Gain Interface & Modality Projector                   & Tunable             & Attentional gain, filter adaptation \\
+        Ontogenetic    & Propositional Decoder (Plastic Mind) & Highly plastic      & Language, concepts, associations    \\
+        \hline
+    \end{tabular}
+    \caption{Three-layer plasticity framework. Qualia emerge at the Gain Interface, where fixed sensory formats meet plastic conceptual systems.}
+    \label{tab:plasticity}
+\end{table*}
 
 \subsection{Why Qualia Feel Private}
 
-The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results provide a computational demonstration:
+The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results demonstrate that the Inverted Spectrum is \textbf{physically possible}---at least in artificial systems:
 
 \begin{itemize}
     \item Two MaryVLM agents with different random seeds achieve identical VQA accuracy (functional equivalence).
@@ -63,19 +82,47 @@ The Inverted Spectrum has long been cited as a puzzle for functionalism: how can
     \item The external function is shared; the internal geometry is private.
 \end{itemize}
 
-This is not a bug but a feature of learning systems. The Sensory Encoder provides a consistent input format, but the Conceptual Bridge has no constraint forcing it to match another agent's geometry. Each agent develops its own internal ``coordinate system'' for concepts. Communication succeeds not because agents share internal representations, but because they learn to map different internal representations to shared external symbols.
+However, we must be careful about generalizing to biological systems. Our model exhibits high plasticity in the Conceptual Bridge---the random seed determines the learned geometry, and there are no constraints enforcing cross-agent alignment. Human brains may be different in important ways:
 
-\subsection{Implications for the Knowledge Argument}
+\paragraph{Biological Constraints on Inversion}
+Unlike our randomly initialized MLPs, the human visual system develops under strong biological and environmental constraints. Color-opponent channels, cortical organization, and shared developmental pressures may produce more consistent internal geometries across individuals than our model suggests. Empirical work by \citet{Kawakita2025} used optimal transport methods to compare color similarity structures across participants and found that color-neurotypical individuals show \textit{alignable} color spaces at the group level---suggesting that human color qualia may be more consistent than the Inverted Spectrum hypothesis implies. Notably, color-blind participants could \textit{not} be aligned with neurotypical individuals, providing quantitative evidence that inter-individual differences do exist when biological constraints differ.
 
-Our framework is agnostic on whether Mary learns a ``new fact'' or gains a ``new ability.'' Instead, we offer a more precise characterization: Mary's grayscale training creates a Conceptual Bridge optimized for achromatic-to-language translation. When chromatic input arrives:
+\paragraph{Structural vs. Relational Qualia}
+Our analysis leaves open an important philosophical question: does the ``privateness'' of qualia reside in \textit{absolute} geometric positions (structural) or in \textit{relational} patterns (how red relates to blue, green, etc.)? We measure Procrustes disparity, which captures geometric misalignment, but Centered Kernel Alignment (CKA) measures relational similarity. Interestingly, our agents show high Procrustes disparity but moderate CKA---suggesting their color spaces are \textit{rotated} relative to each other but preserve similar \textit{relationships}. Whether subjective experience tracks absolute positions or relational structure remains an open question that our framework can test but not definitively answer.
 
-\begin{enumerate}
-    \item The Sensory Encoder produces a novel representation (it always encoded chromatic format---it was frozen).
-    \item The Conceptual Bridge faces an Out-of-Distribution input, generating a high ``Wow'' signal.
-    \item The Propositional Decoder receives a translation that does not match its learned distribution.
-\end{enumerate}
+\subsection{Unifying the ``Replies'' to Mary's Room}
 
-Whether this constitutes ``new knowledge'' depends on how one defines knowledge. What our model demonstrates is that there is a \textit{measurable computational event} associated with Mary's first chromatic experience---an event that does not occur when she processes grayscale images of the same objects. The ``Hard Problem'' may remain, but the ``Wow'' signal is not mysterious; it is the cost of mismatched formats.
+Philosophers have proposed various responses to Jackson's Knowledge Argument. Remarkably, MaryVLM provides a unified framework in which each ``reply'' corresponds to a distinct computational component:
+
+\paragraph{The Ability Hypothesis} \citep{Nemirow1990}
+Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the Conceptual Bridge's learned capacity to translate chromatic formats into correct verbal responses.
+
+\paragraph{The Acquaintance Hypothesis}
+Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct experiential contact with redness, distinct from knowledge-that or knowledge-how. In our framework, this corresponds to the \textbf{Sensory Encoder's output}. The frozen vision encoder always produced chromatic representations; Mary's Conceptual Bridge simply never received them. Upon release, she becomes ``acquainted'' with a signal format that existed all along but was filtered out by her training regime.
+
+\paragraph{Old Fact / New Guise} \citep{Loar1990}
+Loar and Papineau argued that Mary learns no new facts; she merely grasps old facts under a new \textit{mode of presentation}. This aligns precisely with our architecture: the propositional content (``roses are red'') was always in the \textbf{Propositional Decoder}. What changes is the format in which this content is accessed. The ``new guise'' is the chromatic representation from the Sensory Encoder---a different input pathway to the same semantic knowledge.
+
+\paragraph{Synthesis}
+These replies are not competitors but descriptions of different components of the same system:
+
+\begin{table*}[t]
+    \centering
+    \small
+    \begin{tabular}{@{}llp{5cm}@{}}
+        \hline
+        \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                                \\
+        \hline
+        Ability Hypothesis & VQA Performance            & Improved classification after chromatic fine-tuning                  \\
+        Acquaintance       & Sensory Encoder output     & Direct exposure to chromatic format (always existed, newly accessed) \\
+        Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                       \\
+        \hline
+    \end{tabular}
+    \caption{Mapping philosophical replies to MaryVLM components.}
+    \label{tab:replies}
+\end{table*}
+
+The ``Wow'' signal is what \textit{all} these perspectives miss: the measurable computational cost of format translation at the Conceptual Bridge. This is neither a fact, nor an ability, nor a mode of presentation---it is the \textit{friction} between mismatched representational formats. Perhaps this is what qualia \textit{are}: the metabolic signature of translation.
 
 \subsection{Limitations}
 
