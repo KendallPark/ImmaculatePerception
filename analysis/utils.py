@@ -435,4 +435,92 @@ def compute_procrustes(X, Y):
     except Exception as e:
         print(f"Procrustes failed: {e}")
         return np.nan
-        return np.nan
+
+
+# =========================================================
+# 4. Mahalanobis Distance & "Wow" Signal
+# =========================================================
+
+def compute_mahalanobis(z, mean, cov_inv):
+    """
+    Computes Mahalanobis distance for a single vector or batch.
+
+    Args:
+        z: [D] or [N, D] - embedding vector(s)
+        mean: [D] - mean of the reference distribution
+        cov_inv: [D, D] - inverse covariance matrix
+
+    Returns:
+        Mahalanobis distance (scalar or [N] array)
+    """
+    if isinstance(z, torch.Tensor):
+        z = z.cpu().numpy()
+    if isinstance(mean, torch.Tensor):
+        mean = mean.cpu().numpy()
+    if isinstance(cov_inv, torch.Tensor):
+        cov_inv = cov_inv.cpu().numpy()
+
+    # Handle single vector
+    if z.ndim == 1:
+        diff = z - mean
+        return np.sqrt(np.dot(np.dot(diff, cov_inv), diff))
+
+    # Handle batch
+    diff = z - mean  # [N, D]
+    # D_M^2 = (z - mu)^T @ Sigma^-1 @ (z - mu)
+    left = np.dot(diff, cov_inv)  # [N, D]
+    mahal_sq = np.sum(left * diff, axis=1)  # [N]
+    return np.sqrt(mahal_sq)
+
+
+def fit_gaussian(embeddings):
+    """
+    Fit a multivariate Gaussian to embeddings.
+
+    Args:
+        embeddings: [N, D] tensor or array
+
+    Returns:
+        mean: [D] array
+        cov_inv: [D, D] inverse covariance matrix
+    """
+    if isinstance(embeddings, torch.Tensor):
+        embeddings = embeddings.cpu().numpy()
+
+    mean = np.mean(embeddings, axis=0)
+    # Use regularized covariance to avoid singularity
+    cov = np.cov(embeddings, rowvar=False)
+    # Add small regularization for numerical stability
+    cov += np.eye(cov.shape[0]) * 1e-6
+    cov_inv = np.linalg.inv(cov)
+
+    return mean, cov_inv
+
+
+def compute_wow_signal(z_chromatic, z_achromatic, mean_achromatic, cov_inv):
+    """
+    Computes the "Wow" Signal as defined in the paper.
+
+    The Wow Signal measures the novelty of chromatic input relative to
+    achromatic baseline: S = D_M(z_c) - D_M(z_g)
+
+    A positive S indicates the chromatic input is treated as a
+    "Violation of Expectation" (VoE) by the model.
+
+    Args:
+        z_chromatic: [N, D] - chromatic (RGB) embeddings
+        z_achromatic: [N, D] - achromatic (grayscale) embeddings
+        mean_achromatic: [D] - mean of achromatic distribution
+        cov_inv: [D, D] - inverse covariance of achromatic distribution
+
+    Returns:
+        wow_signals: [N] array of per-stimulus Wow signals
+        mean_wow: scalar mean Wow signal
+        std_wow: scalar std of Wow signals
+    """
+    d_m_chromatic = compute_mahalanobis(z_chromatic, mean_achromatic, cov_inv)
+    d_m_achromatic = compute_mahalanobis(z_achromatic, mean_achromatic, cov_inv)
+
+    wow_signals = d_m_chromatic - d_m_achromatic
+
+    return wow_signals, np.mean(wow_signals), np.std(wow_signals)
