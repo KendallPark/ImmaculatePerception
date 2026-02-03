@@ -25,3 +25,15 @@ checkpoints/
 notebooks/
 *.slurm
 /.hf_cache
+/paper/main_paper.synctex.gz
+/paper/main_paper.run.xml
+/paper/main_paper.pdf
+/paper/main_paper.out
+/paper/main_paper.log
+/paper/main_paper.fls
+/paper/main_paper.fdb_latexmk
+/paper/main_paper.blg
+/paper/main_paper.bcf
+/paper/main_paper.bbl
+/paper/main_paper.aux
+/paper/indent.log

@@ -56,10 +56,11 @@ Figure 3\. a, Training Loss. b, MMStar Accuracy, c,
 Figure 4\. Embedding Visualizations.  
 Different colors? 1000 activations from 10 categories. (or maybe 8 by 8). 8 colors, 8 shapes. The sort of thing matplotlib can handle well.
 
-Figure 5\. Learning “Red” Visualizations.  
+Figure 5\. Representational Analysis.
+
+Figure 6\. Learning “Red” Visualizations.  
 Step by step measurements of OOD error alongside
 
-Figure 6\. Brain vs MaryVLM (can possibly roll into Fig 2?)
 
 ## Introduction
 

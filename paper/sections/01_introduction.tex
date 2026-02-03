@@ -1,7 +1,7 @@
 \section{Introduction}
 
 \paragraph{What is the problem?}
-A foundational challenge in cognitive science is bridging the "Explanatory Gap" between the objective description of information processing and the subjective character of sensory experience. While computational models have successfully replicated high-level cognitive functions such as reasoning and object recognition, they largely fail to account for the phenomenology of \textit{qualia}---the "raw feel" of a sensory format. The prevailing question has shifted from the metaphysical "What is consciousness?" to the engineering-focused "What architectural constraints are required for a system to exhibit the structural properties of subjective experience?"
+A foundational challenge in cognitive science is bridging the "Explanatory Gap" between the objective description of information processing and the subjective character of sensory experience. While computational models have successfully replicated high-level cognitive functions such as reasoning and object recognition, they largely fail to account for the phenomenology of \textit{qualia}---the ''raw feel'' of a sensory format. The prevailing question has shifted from the metaphysical "What is consciousness?" to the engineering-focused "What architectural constraints are required for a system to exhibit the structural properties of subjective experience?"
 
 \paragraph{Why is it interesting and important?}
 The status of qualia represents the single significant boundary condition for the computational theory of mind. Historically, the field has often conceded that subjective experience lies outside its explanatory scope. As \citet{Griffith2026} argued in their critique, if cognitive science is strictly the study of information processing, and qualia are defined as non-informational "raw feels," then subjectivity is axiomatically excluded from the domain of inquiry.
@@ -15,6 +15,14 @@ Modeling this phenomenon is difficult because standard neural architectures are 
 Previous computational attempts have often relied on functionalist descriptions or purely symbolic systems that lack the continuous, high-dimensional nature of sensory data. Conversely, recent deep learning approaches often ignore the structural constraints necessary to test the "Knowledge Argument" \citep{Jackson1982}. They do not isolate the \textit{format} of the information from the \textit{content}. To date, there has been no rigorous attempt to operationalize the "Mary's Room" thought experiment using state-of-the-art Vision-Language Models (VLMs) where the sensory hardware is strictly "frozen" against a learning conceptual system.
 
 \subsection{Key components of our approach}
+
+\begin{comment}
+What this paper is not:
+1. No philosophical treatment of the end of the knowledge problem (physicalism); out of scope.
+2. Not an attempt to explain how the brain works. Not a claim that the brain works like VLM. The point is to provide an example of a physical information processing system that could yield the subjective experience of qualia.
+3. No hard problems were solved, no philosophical zombies were slain. We do argue that the subjective nature of qualia is not part of the hard problem of consciousness, but rather a consequence of the structure of information processing. Subjectivity is not problem, but an expected feature of such a system.
+
+\end{comment}
 
 We propose \textbf{MaryVLM}, a framework that tests the "Impenetrable Representation Hypothesis": that qualia arise from the friction of translating between a fixed sensory encoder and a plastic conceptual decoder. We utilize a small-scale VLM (SmolVLM) and impose a strict architectural constraint: the vision encoder (SigLIP) is frozen to simulate biological hardwiring, while the projection layer and language model are trained solely on achromatic (grayscale) data.
 

@@ -29,16 +29,14 @@
 % \cogscifinalcopy %%% Uncomment this line for the final submission
 
 %%% Bibliography %%%
-\usepackage[
-  style=apa,
-  natbib=true,
-  annotation=false,
-]{biblatex}
-
-\addbibresource{paper/qualia.bib} %%% Specify the path to a BibLaTeX file
+\usepackage[natbib=true]{biblatex}
+\addbibresource{qualia.bib}
 \setlength{\bibhang}{.125in}
 
+\usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage{float} %%% Roger Levy added this and changed figure/table placement to [H] for conformity to Word template, though floating tables and figures to top is still generally recommended!
+\usepackage{comment}
 
 % Sometimes it can be useful to turn off hyphenation for purposes such as spell checking of the resulting PDF.
 % \usepackage[none]{hyphenat} %%% Uncomment to turn off hyphenation
@@ -46,10 +44,9 @@
 \title{How to Make a Proceedings Paper Submission}
 
 %%% Format authors using helper functions from authblk package %%%
-\author[1]{\mbox{Author N. One (a1@uni.edu)}}
-\author[2]{\mbox{Author Number Two}}
-\affil[1]{Department of Hypothetical Sciences, University of Illustrations}
-\affil[2]{Department of Example Studies, University of Demonstrations}
+\author[1]{\mbox{Kendall Park (kendall@cs.wisc.edu)}}
+\author[1]{\mbox{Fred Sala (fred@cs.wisc.edu)}}
+\affil[1]{Department of Computer Science, University of Wisconsin-Madison}
 
 %%% Or, format authors manually %%%
 % \author{
@@ -60,30 +57,32 @@
 %   }
 % }
 
+\begin{document}
+
 \maketitle
 
 \begin{abstract}
-Include no author information in the initial submission, to facilitate blind review. AI tools cannot
-be listed as authors, and authors retain full responsibility for the accuracy, integrity, and
-originality of all content in their manuscripts. This includes verifying factual claims, ensuring
-proper attribution of ideas, and confirming that the work meets standards for academic integrity and
-does not contain plagiarized content. See the Acknowledgments section of the template for AI use
-declaration and acknowledgment. The abstract should be one paragraph, no more than 150~words,
-indent 1/8~inch on both sides, in 9~point font with single spacing. The heading
-``\textbf{Abstract}'' should be 10~point, bold, centered, with one line of space below it. This
-one-paragraph abstract section is required only for standard proceedings papers. Following the
-abstract should be a blank line, followed by the header ``\textbf{Keywords:}'' and a list of
-descriptive keywords separated by semicolons, all in 9~point font, as shown below.
+    Include no author information in the initial submission, to facilitate blind review. AI tools cannot
+    be listed as authors, and authors retain full responsibility for the accuracy, integrity, and
+    originality of all content in their manuscripts. This includes verifying factual claims, ensuring
+    proper attribution of ideas, and confirming that the work meets standards for academic integrity and
+    does not contain plagiarized content. See the Acknowledgments section of the template for AI use
+    declaration and acknowledgment. The abstract should be one paragraph, no more than 150~words,
+    indent 1/8~inch on both sides, in 9~point font with single spacing. The heading
+    ``\textbf{Abstract}'' should be 10~point, bold, centered, with one line of space below it. This
+    one-paragraph abstract section is required only for standard proceedings papers. Following the
+    abstract should be a blank line, followed by the header ``\textbf{Keywords:}'' and a list of
+    descriptive keywords separated by semicolons, all in 9~point font, as shown below.
 
-\textbf{Keywords:}
-qualia; consciousness; vision-language models; predictive coding; explanatory gap; Mary's room
+    \textbf{Keywords:}
+    qualia; consciousness; vision-language models; predictive coding; explanatory gap; Mary's room
 \end{abstract}
 
-\input{paper/sections/01_introduction}
-\input{paper/sections/02_prior_work}
-\input{paper/sections/03_methods}
-\input{paper/sections/04_results}
-\input{paper/sections/05_discussion}
+\input{sections/01_introduction}
+\input{sections/02_prior_work}
+\input{sections/03_methods}
+\input{sections/04_results}
+\input{sections/05_discussion}
 
 \section{Acknowledgments}
 
