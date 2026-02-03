@@ -1,45 +1,101 @@
 \section{Discussion}
 
-Our \textit{MaryVLM} framework offers a rigorous computational translation of the ''Explanatory Gap,'' unifying philosophical insights with empirical metrics from cognitive science and AI. By modeling qualia not as ''raw feels'' but as the computational cost of format translation, we arrive at a physicalist account of subjectivity that respects the phenomenology of ''shock''.
+Our findings suggest that the subjective character of qualia---the fact that sensory experiences feel like \textit{something}, and that my red might differ from yours---can be understood as a consequence of information processing architecture, not as a mysterious extra ingredient.
 
-\subsection{The Phenomenology of Prediction Error}
+\subsection{Two Types of Novelty}
 
-Our finding of a robust ''Wow'' signal unifies the philosophical concept of ''phenomenal surprise'' with the neuroscientific framework of \textit{Predictive Coding}. In biological systems, the Mismatch Negativity (MMN) signal arises when sensory input violates the brain's internal generative model. Our model replicates this: Mary’s ''shock'' is a massive Out-of-Distribution (OOD) error term generated when the ''read-only'' visual module forces a ''chromatic'' format into a ''luminance'' conceptual schema.
+A central insight from our experiments is the distinction between \textbf{Sensory Novelty} and \textbf{Semantic Novelty}:
 
-This suggests that the ''feeling'' of qualia is the metabolic and entropic cost of this representational friction. It aligns with the \textit{Global Neuronal Workspace} theory, which posits that only high-intensity prediction errors trigger ''global ignition'' and enter conscious awareness. In MaryVLM, the ''Wow'' signal is the threshold mechanism that promotes sensory data from unconscious processing to the conscious ''workspace'' of the language model.
+\begin{table*}[t]
+    \centering
+    \small
+    \begin{tabular}{@{}lp{3.2cm}p{4cm}@{}}
+        \hline
+        \textbf{Type} & \textbf{Definition}           & \textbf{Example}                \\
+        \hline
+        Sensory       & Novel signal \textit{format}  & RGB to grayscale-trained system \\
+        Semantic      & Novel signal \textit{content} & New object category             \\
+        \hline
+    \end{tabular}
+    \caption{Sensory vs. Semantic Novelty. The ``Wow'' signal measures sensory novelty---surprise at format, not content.}
+    \label{tab:novelty_types}
+\end{table*}
 
-\subsection{Resolving the ''Inverted Spectrum''}
+Standard machine learning metrics (e.g., classification accuracy, perplexity) measure semantic novelty: does the model recognize the object? Our ``Wow'' signal measures something different---does the model recognize the \textit{format}? A grayscale-trained model can correctly identify a red apple (low semantic novelty) while still experiencing the chromatic format as profoundly unfamiliar (high sensory novelty). This dissociation is precisely what makes qualia puzzling: Mary knows everything about red, yet seeing it is still surprising.
+
+\subsection{The Architecture of Subjectivity}
+
+Our framework suggests that qualia emerge from a specific architectural pattern:
+
+\begin{table*}[t]
+    \centering
+    \small
+    \begin{tabular}{@{}lll@{}}
+        \hline
+        \textbf{Component} & \textbf{Name}         & \textbf{Role}                    \\
+        \hline
+        Vision Encoder     & Sensory Encoder       & Fixed hardware (format-specific) \\
+        MLPs               & Conceptual Bridge     & Format translation interface     \\
+        Language Model     & Propositional Decoder & ``Knowing that'' vs. experience  \\
+        \hline
+    \end{tabular}
+    \caption{MaryVLM components and their philosophical roles.}
+    \label{tab:architecture}
+\end{table*}
+
+The key constraint is the \textbf{asymmetry} between these components: the Sensory Encoder is frozen (phylogenetic), while the Conceptual Bridge and Propositional Decoder are plastic (ontogenetic). This asymmetry creates the conditions for qualia:
+
+\begin{enumerate}
+    \item The Sensory Encoder produces representations in a format determined by its fixed weights.
+    \item The Conceptual Bridge learns to translate this format into language space---but only for formats it has seen during training.
+    \item When a novel format arrives (chromatic input), the Bridge faces an unexpected translation cost---the ``Wow'' signal.
+\end{enumerate}
+
+Subjectivity arises because different agents (different random seeds) develop different Conceptual Bridges. They translate the same Sensory Encoding into different geometric arrangements in language space. The input is objective; the translation is subjective.
+
+\subsection{Why Qualia Feel Private}
+
+The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results provide a computational demonstration:
 
 \begin{itemize}
-    \item Inverted Spectrum is often cited as a challenge to functionalism.
-    \item We demonstrate, in physical terms, how the internal representations can be different, yet yield similar results.
-    \item Tie in work by Kawakita (2025).
+    \item Two MaryVLM agents with different random seeds achieve identical VQA accuracy (functional equivalence).
+    \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
+    \item The external function is shared; the internal geometry is private.
 \end{itemize}
 
-\subsection{The Limits of Encapsulation}
+This is not a bug but a feature of learning systems. The Sensory Encoder provides a consistent input format, but the Conceptual Bridge has no constraint forcing it to match another agent's geometry. Each agent develops its own internal ``coordinate system'' for concepts. Communication succeeds not because agents share internal representations, but because they learn to map different internal representations to shared external symbols.
 
-Our framework posits a strict architectural divide between fixed sensory encoding and plastic conceptual processing. However, to account for empirical evidence of perceptual learning, we must clarify how top-down signals interact with this divide without violating the ''read-only'' constraint. We propose a mechanism of \textbf{''Soft Encapsulation''} defined by the interaction between phylogenetic and ontogenetic systems.
+\subsection{Implications for the Knowledge Argument}
 
-\subsubsection{The Stability of Phylogenetic Representations (The ''Hard'' Boundary)}
+Our framework is agnostic on whether Mary learns a ``new fact'' or gains a ``new ability.'' Instead, we offer a more precise characterization: Mary's grayscale training creates a Conceptual Bridge optimized for achromatic-to-language translation. When chromatic input arrives:
 
-The sensory encoder produces \textbf{Phylogenetic Representations}: high-dimensional states defined by evolutionarily fixed (frozen) weights. These states are \textbf{Cognitively Impenetrable}---they are ''read-only'' to the conceptual system. No amount of ''inner speech'' or conceptual belief can rewrite the vector coordinates of ''Red'' to match ''Green.'' The topology of the latent space is immutable.
+\begin{enumerate}
+    \item The Sensory Encoder produces a novel representation (it always encoded chromatic format---it was frozen).
+    \item The Conceptual Bridge faces an Out-of-Distribution input, generating a high ``Wow'' signal.
+    \item The Propositional Decoder receives a translation that does not match its learned distribution.
+\end{enumerate}
 
-\subsubsection{The Plasticity of Ontogenetic Representations (The ''Blurred'' Boundary)}
+Whether this constitutes ``new knowledge'' depends on how one defines knowledge. What our model demonstrates is that there is a \textit{measurable computational event} associated with Mary's first chromatic experience---an event that does not occur when she processes grayscale images of the same objects. The ``Hard Problem'' may remain, but the ``Wow'' signal is not mysterious; it is the cost of mismatched formats.
 
-However, the downstream conceptual system operates on \textbf{Ontogenetic Representations}---malleable, ''read-write'' structures derived from social learning. While this system cannot \textit{overwrite} the Phylogenetic Representation, it can \textit{modulate} how it samples from it. We cite two well-documented effects as evidence for this mechanism:
+\subsection{Limitations}
 
-\paragraph{Case A: Ontogenetic Modulation (The ''Russian Blue'' Effect)}
-Research on categorical perception \citep{Wacongne2012} demonstrates that language speakers (e.g., Russian speakers distinguishing \textit{goluboy} from \textit{siniy}) exhibit faster discrimination of color boundaries. (Note: Reference likely needs update, checking Whorfian literature).
+Several limitations constrain our conclusions:
 
-\textbf{Our Interpretation:} This is \textbf{Top-Down Attentional Gain}. The \textbf{Ontogenetic System} (Language) applies a ''predictive filter'' to the \textbf{Phylogenetic Representation} (Vision). The hardware format of ''blue'' remains Impenetrable (the rods and cones do not change), but the \textbf{Penetrable} conceptual layer learns to amplify specific dimensions of the sensory manifold. The experience changes not because the input was rewritten, but because the readout was sharpened.
+\begin{itemize}
+    \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
+    \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
+    \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
+    \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
+\end{itemize}
 
-\paragraph{Case B: Differentiation of Manifolds (The ''Wine Taster'' Effect)}
-Similarly, perceptual learning literature \citep{Goldstone1998} shows that experts (e.g., wine tasters) perceive distinct features where novices perceive a unified ''blob.''
+\subsection{Future Directions}
 
-\textbf{Our Interpretation:} This represents the \textbf{Differentiation of Impenetrable States}. For a novice, the Ontogenetic system lacks the granularity to map the Phylogenetic input, resulting in a high-entropy ''Wow'' signal (confusion). For the expert, the Ontogenetic system has learned a higher-resolution mapping. The ''Wow'' signal decreases not because the sensory hardware changed (it is frozen), but because the \textbf{Software Resolution} of the conceptual system successfully differentiated the immutable hardware format.
+Several extensions suggest themselves:
 
-\paragraph{Conclusion} The representation itself remains fixed (the hardware format is immutable), but the agent's sensitivity to it becomes refined. The ''Wow'' signal decreases over time because the \textbf{Ontogenetic System} successfully optimizes its interface with the \textbf{Phylogenetic} manifold, transitioning from ''Shock'' to ''Categorization.''
+\begin{enumerate}
+    \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the Conceptual Bridge adapts?
+    \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
+    \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
+    \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.
+\end{enumerate}
 
-\subsection{Limitations and Future Directions}
-
-Future work should extend this framework to auditory or tactile domains to test if the ''Wow'' signal is modality-invariant. Additionally, integrating this individual model into a \textit{Collective Predictive Coding} framework could demonstrate how a community of ''inverted'' Marys evolves a shared language despite their private representational differences.

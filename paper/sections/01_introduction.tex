@@ -1,44 +1,63 @@
 \section{Introduction}
 
-\paragraph{What is the problem?}
-A foundational challenge in cognitive science is bridging the "Explanatory Gap" between the objective description of information processing and the subjective character of sensory experience. While computational models have successfully replicated high-level cognitive functions such as reasoning and object recognition, they largely fail to account for the phenomenology of \textit{qualia}---the ''raw feel'' of a sensory format. The prevailing question has shifted from the metaphysical "What is consciousness?" to the engineering-focused "What architectural constraints are required for a system to exhibit the structural properties of subjective experience?"
+\subsection{Mary's Room}
 
-\paragraph{Why is it interesting and important?}
-The status of qualia represents the single significant boundary condition for the computational theory of mind. Historically, the field has often conceded that subjective experience lies outside its explanatory scope. As \citet{Griffith2026} argued in their critique, if cognitive science is strictly the study of information processing, and qualia are defined as non-informational "raw feels," then subjectivity is axiomatically excluded from the domain of inquiry.
+Imagine a brilliant scientist named Mary who has spent her entire life in a black-and-white room. She has access to the world's complete scientific knowledge about color vision: the wavelengths of light, the neural pathways from retina to cortex, the physics of why the sky is blue and blood is red. Mary knows everything there is to know about color---propositionally.
 
-This concession is devastating: it implies that a physicalist science of mind is fundamentally incomplete, forever separated from the phenomenology it seeks to explain. This paper challenges that defeatist conclusion. By operationalizing qualia through the "Constructive Approach" \citep{Taniguchi2025}, we move the debate from metaphysical stalemate to empirical falsifiability. The stakes are high: if we can demonstrate that "raw feels" leave a distinct, quantifiable structural footprint (a "Wow" signal) within a physical system, we refute the dualistic premise that subjectivity is non-computational. Conversely, if high-fidelity models like \textit{MaryVLM} fail to generate such signals despite functional equivalence, it would provide robust empirical support for the view that the "Hard Problem" is indeed a permanent barrier to physical understanding \citep{Griffith2026}.
+One day, the door opens and Mary steps outside. She sees a red rose for the first time.
 
-\paragraph{Why is it hard?}
-Modeling this phenomenon is difficult because standard neural architectures are "leaky" by design. In typical multimodal learning (e.g., CLIP or standard VLMs), visual encoders and language decoders are trained simultaneously to minimize alignment error. Consequently, these models learn an immediate, frictionless mapping between the pixel values of "red" and the token "red." They lack the biological reality of \textit{encapsulation}: the fact that our sensory hardware is evolutionarily fixed ("phylogenetic"), while our conceptual understanding is developmentally plastic ("ontogenetic"). Without this separation, a model cannot experience the "shock" of a new format because it never faces the cost of translation.
+Does Mary learn something new?
 
-\paragraph{Why hasn't it been solved before?}
-Previous computational attempts have often relied on functionalist descriptions or purely symbolic systems that lack the continuous, high-dimensional nature of sensory data. Conversely, recent deep learning approaches often ignore the structural constraints necessary to test the "Knowledge Argument" \citep{Jackson1982}. They do not isolate the \textit{format} of the information from the \textit{content}. To date, there has been no rigorous attempt to operationalize the "Mary's Room" thought experiment using state-of-the-art Vision-Language Models (VLMs) where the sensory hardware is strictly "frozen" against a learning conceptual system.
+This thought experiment, introduced by \citet{Jackson1982}, poses a challenge to physicalism: if complete physical knowledge about color does not prepare Mary for the experience of \textit{seeing} red, then perhaps subjective experience---qualia---is something beyond the physical. The intuition is powerful. Mary knew the wavelength (700nm), knew which neurons would fire, knew she would say ``red.'' Yet something seems to \textit{happen} when she finally sees it. Something that all her propositional knowledge could not provide.
 
-\subsection{Key components of our approach}
+This paper does not resolve the metaphysical debate. Instead, we ask a simpler question: \textbf{Can we build a Mary?}
 
-\begin{comment}
-What this paper is not:
-1. No philosophical treatment of the end of the knowledge problem (physicalism); out of scope.
-2. Not an attempt to explain how the brain works. Not a claim that the brain works like VLM. The point is to provide an example of a physical information processing system that could yield the subjective experience of qualia.
-3. No hard problems were solved, no philosophical zombies were slain. We do argue that the subjective nature of qualia is not part of the hard problem of consciousness, but rather a consequence of the structure of information processing. Subjectivity is not problem, but an expected feature of such a system.
+\subsection{A Computational Mary}
 
-\end{comment}
+We present \textbf{MaryVLM}, a Vision-Language Model trained exclusively on grayscale images. Like the thought experiment's Mary, our model acquires ``textbook knowledge'' about color: it learns that apples are red, the sky is blue, and bananas are yellow---all from text descriptions paired with achromatic images. The model can answer questions about color, reason about color relationships, and generate color-related text. It possesses propositional knowledge about color without ever having processed chromatic input.
 
-We propose \textbf{MaryVLM}, a framework for explaining the subjective nature of qualia. We hypothesize that qualia arise from the friction of translating between a fixed sensory encoder and a plastic conceptual decoder. We utilize the nanoVLM architecture and impose a strict architectural constraint: the vision encoder (SigLIP) is frozen to simulate biological hardwiring, while the projection layers and language model are trained solely on achromatic (grayscale) data.
-
-We then introduce chromatic stimuli (the "Release" phase) to measure two specific phenomena:
+When we expose this grayscale-trained model to RGB images for the first time, we observe two phenomena:
 
 \begin{enumerate}
-    \item \textbf{The "Wow" Signal:} We quantify the "subjective shock" of novel qualia using Mahalanobis distance as a proxy for Mismatch Negativity (MMN), a well-documented prediction error signal in neuroscience.
-    \item \textbf{Structural Realism:} We employ Procrustes Analysis to compare the latent spaces of functionally identical agents, testing for the "Inverted Spectrum" phenomenon.
+    \item \textbf{The ``Wow'' Signal}: The model's internal representations show a measurable ``surprise'' response---a spike in Mahalanobis distance that we interpret as a computational analog of Mismatch Negativity (MMN), the prediction error signal observed in biological brains when expectations are violated.
+
+    \item \textbf{The Inverted Spectrum}: When we train two identical models with different random seeds, they achieve identical functional performance (same answers, same accuracy) but develop structurally different internal representations of color. ``Red'' occupies different geometric positions in their latent spaces---a computational existence proof that functionally equivalent agents can have private, implementation-dependent qualia.
 \end{enumerate}
 
-\subsection{Summary of Contributions}
+\subsection{What This Paper Is (and Is Not)}
+
+We wish to be precise about our claims.
+
+\paragraph{This paper is not:}
+\begin{itemize}
+    \item A philosophical treatment of the Knowledge Argument or physicalism. However, we note that MaryVLM provides a framework for interpreting the various ``replies'' to Jackson's argument: the \textit{Ability Hypothesis} maps to improved VQA performance after chromatic exposure, \textit{knowledge-that} resides in the Propositional Decoder, and \textit{knowledge-how} emerges from the Conceptual Bridge's learned translation function.
+    \item An attempt to explain how the brain works. We do not claim that biological brains are Vision-Language Models. Our architecture is a \textit{demonstration}, not a \textit{mechanism}.
+    \item A solution to the Hard Problem of consciousness. No philosophical zombies were slain in the making of this paper.
+\end{itemize}
+
+\paragraph{This paper is:}
+\begin{itemize}
+    \item A demonstration that the \textit{subjective} character of qualia---the fact that my ``red'' might differ from yours, that novel sensory formats feel like \textit{something}---can emerge from the structure of information processing in a physical system.
+    \item An empirical operationalization of Mary's Room using modern deep learning, with quantifiable metrics for ``surprise'' and ``subjectivity.''
+    \item An argument that subjectivity is not a mysterious extra ingredient, but an expected consequence of how information flows through systems with mismatched representational formats.
+\end{itemize}
+
+\subsection{The Core Insight}
+
+Our key architectural choice is to \textbf{freeze} the vision encoder while training the conceptual layers on grayscale data. This creates a strict separation between:
 
 \begin{itemize}
-    \item \textbf{Architectural Operationalization:} We provide the first implementation of the "Constructive Approach" using a frozen-encoder VLM to simulate the phylogenetic/ontogenetic divide.
-    \item \textbf{The "Wow" Metric:} We demonstrate that the onset of a new sensory format generates a statistically significant Out-of-Distribution (OOD) signal (the "Wow" signal) that is distinct from simple content novelty ($p < .001$), mirroring biological MMN.
-    \item \textbf{Evidence for Structural Realism:} We show that agents can be functionally equivalent (identical VQA performance) while possessing rotationally misaligned latent geometries, providing a computational existence proof for the "Inverted Spectrum."
-    \item \textbf{A Physicalist Account of Subjectivity:} Our results suggest that subjective experience can be modeled as the computational cost of alignment between mismatched representational formats.
-    \item \textbf{Unified Theory of the Knowledge Problem}: As a bonus, our MaryVLM model shows how the various philosophical "replies" to Mary's Room can be unified under one framework.
+    \item \textbf{Phylogenetic processing}: The vision encoder (SigLIP) is fixed, representing evolutionary hardware that processes sensory input in a format-specific way. It ``sees'' RGB whether or not the conceptual system has learned about color.
+    \item \textbf{Ontogenetic learning}: The Modality Projector and language model are plastic, representing learned conceptual knowledge. They have only ever seen grayscale.
 \end{itemize}
+
+When chromatic input arrives, the frozen encoder produces representations that the learned projector has never encountered. The ``Wow'' signal emerges at this interface---the cost of translating between mismatched formats. Subjectivity arises not from any magical property of qualia, but from the fact that different systems (different random seeds, different training histories) develop different internal geometries for representing the same external world.
+
+\subsection{Contributions}
+
+\begin{enumerate}
+    \item We provide the first implementation of Mary's Room using a frozen-encoder VLM, creating a computational agent with propositional color knowledge but no chromatic experience.
+    \item We quantify the ``Wow'' signal ($S = D_M(z_{color}) - D_M(z_{gray})$) and show it is statistically significant across stimuli, analogous to biological Mismatch Negativity.
+    \item We demonstrate the Inverted Spectrum computationally: functionally equivalent agents with different random seeds have measurably different internal representations (high Procrustes disparity, moderate CKA).
+    \item We localize where qualia ``emerge'' in the processing hierarchy: the Modality Projector---the interface between fixed sensation and plastic conception---shows the strongest effects.
+\end{enumerate}

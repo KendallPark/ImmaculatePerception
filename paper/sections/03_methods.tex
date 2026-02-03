@@ -1,58 +1,80 @@
 \section{Methods}
 
-To investigate the functional distinction between propositional knowledge and sensory experience, we employed a dual-encoder Vision-Language Model (VLM) architecture. This setup allows us to operationalize the "Mind-Body" distinction computationally: the vision encoder represents the fixed biological hardware ($E_\phi$), and the language/fusion layers represent the plastic conceptual system ($P_\theta$).
+To investigate the functional distinction between propositional knowledge and sensory experience, we employed a dual-encoder Vision-Language Model (VLM) architecture. This setup allows us to operationalize the ``Mind-Body'' distinction computationally: the vision encoder represents the fixed biological hardware ($E_\phi$), and the language/fusion layers represent the plastic conceptual system ($P_\theta$).
 
 \subsection{Model Architecture}
 
 We utilized the \textbf{nanoVLM} architecture, chosen for its modular separation of vision and language components. The architecture consists of:
 
 \begin{enumerate}
-  \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer. Crucially, the weights $\phi$ were \textbf{frozen} throughout the experiment. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning; they provide a more fixed sensory distinct from high-level belief updating. \cite{Pylyshyn1999}
-  \item \textbf{Conceptual Bridge (Plastic Mind):} A trainable multi-modal projection consisting of two Multi-Layer Perceptrons (MLPs). These MLPs map visual embeddings into the semantic space of the language model and represent the plastic, learned interface between sensory data and conceptual knowledge.
-  \item \textbf{Propositional Decoder:} A transformer-based language model (SmolLM2-135M) representing Mary's store of ``textbook knowledge.''
+  \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer (google/siglip-base-patch16-224) with 12 transformer blocks. Crucially, the weights $\phi$ were \textbf{frozen} throughout training. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning \citep{Pylyshyn1999}.
+  \item \textbf{Conceptual Bridge (Plastic Mind):} A trainable multi-modal projector consisting of two Multi-Layer Perceptrons (MLPs) with pixel shuffle downsampling (factor=2). These MLPs map visual embeddings into the semantic space of the language model and represent the plastic, learned interface between sensory data and conceptual knowledge.
+  \item \textbf{Propositional Decoder:} A transformer-based language model (SmolLM2-135M, 30 layers) representing Mary's store of ``textbook knowledge.''
 \end{enumerate}
 
 \begin{figure}[t]
   \centering
-  \fbox{\parbox[c][3cm]{0.8\linewidth}{\centering Placeholder for Experimental Setup}}
-  \caption{Experimental Setup.}
-  \label{fig:experimental_setup}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
   \fbox{\parbox[c][3cm]{0.8\linewidth}{\centering Placeholder for MaryVLM Architecture}}
-  \caption{MaryVLM Architecture.}
+  \caption{MaryVLM Architecture. The SigLIP vision encoder (frozen, blue) provides fixed sensory representations. The Modality Projector (trainable, green) learns to map visual embeddings to language space. The SmolLM2 decoder (trainable, orange) generates textual outputs.}
   \label{fig:maryvlm_architecture}
 \end{figure}
 
-\subsection{Stimuli and Data Partitions}
+\subsection{Training Data}
 
-We utilized the \textbf{The Cauldron} dataset (HuggingFaceM4/the\_cauldron), a diverse collection of vision-language tasks for training. For evaluation, we employed the \textbf{MMStar} benchmark (Lin-Chen/MMStar), a comprehensive VQA test set designed to assess multimodal reasoning capabilities. We partitioned the evaluation data into two functional subsets:
+We utilized \textbf{The Cauldron} dataset \citep{laurencon2024matters}, a diverse collection of 45 vision-language tasks aggregated for multi-task VLM training. The dataset includes tasks spanning visual question answering (VQAv2, AOKVQA, ScienceQA), document understanding (DocVQA, ChartQA), optical character recognition (TextVQA, OCR-VQA), and image captioning (Localized Narratives, TextCaps). This diversity ensures the model acquires broad ``textbook knowledge'' about the visual world, including extensive propositional knowledge about color (e.g., ``apples are red,'' ``the sky is blue'').
 
-\begin{itemize}
-  \item \textbf{Internal Control (Achromatic):} Images presented in grayscale ($L, L, L$). These validate the agent’s \textbf{Conceptual Grounding}---its ability to identify shapes and textures (e.g., "This is a banana") based on its training.
-  \item \textbf{External Release (Chromatic):} The \textit{same} images presented in RGB. Because the fusion layers have never encountered the chromatic format, these serve as the stimuli for the "Release" phase.
-\end{itemize}
+For evaluation, we employed the \textbf{MMStar} benchmark \citep{chen2024mmstar}, a comprehensive VQA test set designed to assess multimodal reasoning capabilities with minimal data leakage from training sets.
+
+\subsection{Model Variants}
+
+To disentangle the effects of sensory format, learning history, and random initialization, we trained five model variants:
+
+\begin{enumerate}
+  \item $\mathbf{M_{gray,0}}$: Trained exclusively on grayscale images (seed=0). This is ``Mary'' in the black-and-white room.
+  \item $\mathbf{M_{gray,0}^{cont}}$: $M_{gray,0}$ with continued training on RGB images. This represents Mary \textit{after} leaving the room, having now been exposed to color.
+  \item $\mathbf{M_{rgb,0}}$: Trained on RGB images from the start (seed=0). A ``normal'' agent with lifelong color experience.
+  \item $\mathbf{M_{rgb,1}}$: Identical to $M_{rgb,0}$ but with seed=1. Same training data, same architecture, different random initialization.
+\end{enumerate}
+
+The comparison between $M_{rgb,0}$ and $M_{rgb,1}$ is critical: these agents are \textit{functionally equivalent} (identical training, identical capabilities) but differ only in their random initialization. Any structural differences in their internal representations would constitute a computational analog of the \textbf{Inverted Spectrum}---the philosophical puzzle of whether your ``red'' could be my ``green.''
 
 \subsection{Procedure}
 
-\paragraph{Phase 1: Achromatic Acquisition ("The Room")}
-To simulate Mary’s confinement, we trained the agent’s conceptual layers ($P_\theta$ and $D_\psi$) exclusively on grayscale images. An RGB-to-Luminance transformation $T(x)$ was applied to all training inputs. The model was optimized on Visual Question Answering (VQA) and Captioning tasks until it achieved asymptotic accuracy. During this phase, the model possessed "complete physical information" in the form of text descriptions (e.g., "Apples are red") but lacked the functional capacity to process the chromatic signal.
+\paragraph{Phase 1: Achromatic Acquisition (``The Room'')}
+To simulate Mary's confinement, we trained $M_{gray,0}$ exclusively on grayscale images. An RGB-to-Luminance transformation was applied to all training inputs:
+\begin{equation}
+  L = 0.299R + 0.587G + 0.114B
+\end{equation}
+The grayscale image was then broadcast to three channels ($L, L, L$) to maintain compatibility with the frozen vision encoder. Training proceeded for 4 epochs with batch size 256, using AdamW optimization with separate learning rates for the modality projector ($2 \times 10^{-3}$) and language model backbone ($1 \times 10^{-4}$).
 
-\paragraph{Phase 2: Chromatic Release (Paired-Stimulus Evaluation)}
-To measure the "subjective shock" of the new format, we employed a \textbf{Paired-Stimulus Design}. We presented the model with identical images in both the Internal (Achromatic) and External (Chromatic) conditions. We hypothesized that the Chromatic condition should trigger a high-energy "surprise" signal, distinct from the low-energy state of recognizing the object in grayscale.
+\paragraph{Phase 2: Chromatic Release}
+We exposed the grayscale-trained model to RGB stimuli and measured the ``subjective shock'' via Mahalanobis distance (see Measures). Additionally, we continued training $M_{gray,0}$ on RGB images to create $M_{gray,0}^{cont}$, simulating Mary's gradual adaptation to color.
 
 \subsection{Measures}
 
-\paragraph{Novelty Detection (The "Wow" Signal)}
-We operationalized the neural signature of novelty as \textbf{Mahalanobis Distance} ($D_M$). In biological systems, the Locus Coeruleus-Norepinephrine (LC-NE) system gates attention when predictions fail \citep{AstonJones2005}. Computationally, we modeled this as the distance of the incoming chromatic vector $z_c$ from the learned manifold of achromatic vectors $\mu_g$:
+We employed three complementary approaches to analyze the models' internal representations at each layer of the processing hierarchy.
 
+\paragraph{Novelty Detection (The ``Wow'' Signal)}
+We operationalized the neural signature of novelty as \textbf{Mahalanobis Distance} ($D_M$). For each stimulus, we computed:
 \begin{equation}
-  S = D_M(z_c) - D_M(z_g)
+  S = D_M(z_c; \mu_g, \Sigma_g) - D_M(z_g; \mu_g, \Sigma_g)
 \end{equation}
+where $z_c$ and $z_g$ are the chromatic and achromatic embeddings, and $(\mu_g, \Sigma_g)$ are the mean and covariance of the achromatic distribution. A significant positive $S$ indicates a \textbf{Violation of Expectation} (VoE)---a computational analog of the Mismatch Negativity (MMN) observed in EEG studies \citep{Naatanen2007}.
 
-A significant positive $S$ indicates that "Redness" is not treated as just another feature, but as a \textbf{Violation of Expectation} (VoE) regarding the fundamental format of the input.
+\paragraph{Representational Geometry}
+To compare representations across models and conditions, we employed three metrics computed layer-by-layer:
 
-\paragraph{Subjective Specificity (The Inverted Spectrum)}
-To test whether "qualia" are objective properties of the signal or subjective constructions of the agent, we trained two identical MaryVLM agents ($M_A$ and $M_B$) with different random seeds for the conceptual bridge. We extracted the latent centroid vectors for the concept "Red" from both agents. We utilized \textbf{Procrustes Analysis} to measure the alignment between their internal spaces. High functional equivalence (identical verbal outputs) combined with high Procrustes disparity (misaligned internal vectors) would support the hypothesis that subjective experience is \textit{structurally real} but \textit{implementation-dependent}.
+\begin{itemize}
+  \item \textbf{Centered Kernel Alignment (CKA)} \citep{Kriegeskorte2008}: Measures the similarity of representational geometries, invariant to orthogonal transformations. High CKA ($\approx 1$) indicates similar representational structure.
+  \item \textbf{Representational Consistency}: Spearman correlation between Representational Dissimilarity Matrices (RDMs). Captures whether stimuli that are ``close'' in one model are also ``close'' in another.
+  \item \textbf{Procrustes Disparity}: The residual error after optimally aligning two point clouds via rotation, scaling, and translation. Low disparity indicates representations that can be perfectly aligned; high disparity indicates \textit{structurally different} encodings of the same concepts.
+\end{itemize}
+
+\paragraph{Cross-Model Comparisons}
+We computed these metrics for four key comparisons:
+\begin{enumerate}
+  \item $M_{gray,0}(\text{gray})$ vs. $M_{gray,0}(\text{rgb})$: Same model, different input format. Tests the ``Wow'' signal.
+  \item $M_{gray,0}(\text{rgb})$ vs. $M_{gray,0}^{cont}(\text{rgb})$: Before vs. after learning color. Tests adaptation.
+  \item $M_{gray,0}^{cont}(\text{rgb})$ vs. $M_{rgb,0}(\text{rgb})$: Different learning histories, same capability. Tests whether the \textit{path} to knowledge matters.
+  \item $M_{rgb,0}(\text{rgb})$ vs. $M_{rgb,1}(\text{rgb})$: Same training, different seeds. Tests the \textbf{Inverted Spectrum hypothesis}.
+\end{enumerate}
