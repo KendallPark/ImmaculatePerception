@@ -77,12 +77,12 @@ In MaryVLM, this corresponds to the Modality Projector---trainable layers that l
 The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results demonstrate that the Inverted Spectrum is \textbf{physically possible}---at least in artificial systems:
 
 \begin{itemize}
-    \item Two MaryVLM agents with different random seeds achieve identical VQA accuracy (functional equivalence).
+    \item Two MaryVLM agents with different random seeds achieve comparable VQA accuracy (functional equivalence).
     \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
     \item The external function is shared; the internal geometry is private.
 \end{itemize}
 
-However, we must be careful about generalizing to biological systems. Our model exhibits high plasticity in the Conceptual Bridge---the random seed determines the learned geometry, and there are no constraints enforcing cross-agent alignment. Human brains may be different in important ways:
+However, we must be careful about generalizing to biological systems. Our model exhibits high plasticity in the trainable layers---the random seed determines the learned geometry, and there are no constraints enforcing cross-agent alignment. Human brains may be different in important ways:
 
 \paragraph{Biological Constraints on Inversion}
 Unlike our randomly initialized MLPs, the human visual system develops under strong biological and environmental constraints. Color-opponent channels, cortical organization, and shared developmental pressures may produce more consistent internal geometries across individuals than our model suggests. Empirical work by \citet{Kawakita2025} used optimal transport methods to compare color similarity structures across participants and found that color-neurotypical individuals show \textit{alignable} color spaces at the group level---suggesting that human color qualia may be more consistent than the Inverted Spectrum hypothesis implies. Notably, color-blind participants could \textit{not} be aligned with neurotypical individuals, providing quantitative evidence that inter-individual differences do exist when biological constraints differ.
@@ -95,7 +95,7 @@ Our analysis leaves open an important philosophical question: does the ``private
 Philosophers have proposed various responses to Jackson's Knowledge Argument. Remarkably, MaryVLM provides a unified framework in which each ``reply'' corresponds to a distinct computational component:
 
 \paragraph{The Ability Hypothesis} \citep{Nemirow1990}
-Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the Conceptual Bridge's learned capacity to translate chromatic formats into correct verbal responses.
+Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the joint capacity of the Modality Projector and Propositional Decoder to translate chromatic formats into correct verbal responses---a learned skill that spans the Gain Interface and the Plastic Mind.
 
 \paragraph{The Acquaintance Hypothesis}
 Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct experiential contact with redness, distinct from knowledge-that or knowledge-how. In our framework, acquaintance corresponds directly to the \textbf{``Wow'' signal}. The Sensory Encoder always produced chromatic representations, but the Modality Projector never encountered them during training. Upon release, the downstream system faces a representation it has never seen---and the measurable cost of this encounter (Mahalanobis distance spike) is the computational signature of ``becoming acquainted.'' The Wow signal \textit{is} acquaintance, operationalized.
@@ -104,8 +104,7 @@ Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct exper
 Loar and Papineau argued that Mary learns no new facts; she merely grasps old facts under a new \textit{mode of presentation}. This aligns precisely with our architecture: the propositional content (``roses are red'') was always in the \textbf{Propositional Decoder}. What changes is the format in which this content is accessed. The ``new guise'' is the chromatic representation from the Sensory Encoder---a different input pathway to the same semantic knowledge.
 
 \paragraph{Synthesis}
-These replies are not competitors but descriptions of different components of the same system:
-
+These replies are not competitors but descriptions of different aspects of the same system. The disagreement might be considered a "level of analysis" problem \citep{Marr1982}. Where in the information processing pipeline does one draw boundaries around the idea of ``knowledge''? MaryVLM makes this concrete:
 \begin{table*}[t]
     \centering
     \small
@@ -130,9 +129,9 @@ Several limitations constrain our conclusions:
 
 \begin{itemize}
     \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
-    \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
-    \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
-    \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
+          % \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
+          % \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
+          % \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
 \end{itemize}
 
 \subsection{Future Directions}
@@ -140,7 +139,7 @@ Several limitations constrain our conclusions:
 Several extensions suggest themselves:
 
 \begin{enumerate}
-    \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the Conceptual Bridge adapts?
+    \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the downstream trainable layers adapt?
     \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
     \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
     \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.

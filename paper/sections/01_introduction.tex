@@ -19,9 +19,9 @@ We present \textbf{MaryVLM}, a Vision-Language Model trained exclusively on gray
 When we expose this grayscale-trained model to RGB images for the first time, we observe two phenomena:
 
 \begin{enumerate}
-    \item \textbf{The ``Wow'' Signal}: The model's internal representations show a measurable ``surprise'' response---a spike in Mahalanobis distance that we interpret as a computational analog of Mismatch Negativity (MMN), the prediction error signal observed in biological brains when expectations are violated.
+  \item \textbf{The ``Wow'' Signal}: The model's internal representations show a measurable ``surprise'' response---a spike in Mahalanobis distance that we interpret as a computational analog of Mismatch Negativity (MMN), the prediction error signal observed in biological brains when expectations are violated.
 
-    \item \textbf{The Inverted Spectrum}: When we train two identical models with different random seeds, they achieve identical functional performance (same answers, same accuracy) but develop structurally different internal representations of color. ``Red'' occupies different geometric positions in their latent spaces---a computational existence proof that functionally equivalent agents can have private, implementation-dependent qualia.
+  \item \textbf{The Inverted Spectrum}: When we train two identical model architectures with different random seeds, they achieve comparable functional performance (similar accuracy on VQA tasks) but develop structurally different internal representations of color. ``Red'' occupies different geometric positions in their latent spaces---a computational demonstration that functionally equivalent agents can have private, implementation-dependent qualia.
 \end{enumerate}
 
 \subsection{What This Paper Is (and Is Not)}
@@ -30,16 +30,16 @@ We wish to be precise about our claims.
 
 \paragraph{This paper is not:}
 \begin{itemize}
-    \item A philosophical treatment of the Knowledge Argument or physicalism. However, we note that MaryVLM provides a unified framework for interpreting the various ``replies'' to Jackson's argument (see Discussion).
-    \item An attempt to explain how the brain works. We do not claim that biological brains are Vision-Language Models. Our architecture is a \textit{demonstration}, not a \textit{mechanism}.
-    \item A solution to the Hard Problem of consciousness. No philosophical zombies were slain in the making of this paper.
+  \item A philosophical treatment of the Knowledge Argument or physicalism. However, we note that MaryVLM provides a unified framework for interpreting the various ``replies'' to Jackson's argument (see Discussion).
+  \item An attempt to explain how the brain works. We do not claim that biological brains are Vision-Language Models. Our architecture is a \textit{demonstration}, not a \textit{mechanism}.
+  \item A solution to the Hard Problem of consciousness. No philosophical zombies were slain in the making of this paper.
 \end{itemize}
 
 \paragraph{This paper is:}
 \begin{itemize}
-    \item A demonstration that the \textit{subjective} character of qualia---the fact that my ``red'' might differ from yours, that novel sensory formats feel like \textit{something}---can emerge from the structure of information processing in a physical system.
-    \item An empirical operationalization of Mary's Room using modern deep learning, with quantifiable metrics for ``surprise'' and ``subjectivity.''
-    \item An argument that subjectivity is not a mysterious extra ingredient, but an expected consequence of how information flows through systems with mismatched representational formats.
+  \item A demonstration that the \textit{subjective} character of qualia---the fact that my ``red'' might differ from yours, that novel sensory formats feel like \textit{something}---can emerge from the structure of information processing in a physical system.
+  \item An empirical operationalization of Mary's Room using modern deep learning, with quantifiable metrics for ``surprise'' and ``subjectivity.''
+  \item An argument that subjectivity is not a mysterious extra ingredient, but an expected consequence of how information flows through systems with mismatched representational formats.
 \end{itemize}
 
 \subsection{The Core Insight}
@@ -47,8 +47,8 @@ We wish to be precise about our claims.
 Our key architectural choice is to \textbf{freeze} the vision encoder while training the conceptual layers on grayscale data. This creates a strict separation between:
 
 \begin{itemize}
-    \item \textbf{Phylogenetic processing}: The vision encoder (SigLIP) is fixed, representing evolutionary hardware that processes sensory input in a format-specific way. It ``sees'' RGB whether or not the conceptual system has learned about color.
-    \item \textbf{Ontogenetic learning}: The Modality Projector and language model are plastic, representing learned conceptual knowledge. They have only ever seen grayscale.
+  \item \textbf{Phylogenetic processing}: The vision encoder (SigLIP) is fixed, representing evolutionary hardware that processes sensory input in a format-specific way. It ``sees'' RGB whether or not the conceptual system has learned about color.
+  \item \textbf{Ontogenetic learning}: The Modality Projector and language model are plastic, representing learned conceptual knowledge. They have only ever seen grayscale.
 \end{itemize}
 
 When chromatic input arrives, the frozen encoder produces representations that the learned projector has never encountered. The ``Wow'' signal emerges at this interface---the cost of translating between mismatched formats. Subjectivity arises not from any magical property of qualia, but from the fact that different systems (different random seeds, different training histories) develop different internal geometries for representing the same external world.
@@ -56,8 +56,8 @@ When chromatic input arrives, the frozen encoder produces representations that t
 \subsection{Contributions}
 
 \begin{enumerate}
-    \item We provide the first implementation of Mary's Room using a frozen-encoder VLM, creating a computational agent with propositional color knowledge but no chromatic experience.
-    \item We quantify the ``Wow'' signal ($S = D_M(z_{color}) - D_M(z_{gray})$) and show it is statistically significant across stimuli, analogous to biological Mismatch Negativity.
-    \item We demonstrate the Inverted Spectrum computationally: functionally equivalent agents with different random seeds have measurably different internal representations (high Procrustes disparity, moderate CKA).
-    \item We localize where qualia ``emerge'' in the processing hierarchy: the Modality Projector---the interface between fixed sensation and plastic conception---shows the strongest effects.
+  \item We provide the first implementation of Mary's Room using a frozen-encoder VLM, creating a computational agent with propositional color knowledge but no chromatic experience.
+  \item We quantify the ``Wow'' signal ($S = D_M(z_{color}) - D_M(z_{gray})$) and show it is statistically significant across stimuli, analogous to biological Mismatch Negativity.
+  \item We demonstrate the Inverted Spectrum computationally: functionally equivalent agents with different random seeds have measurably different internal representations (high Procrustes disparity, moderate CKA).
+  \item We localize where qualia ``emerge'' in the processing hierarchy: the Modality Projector---the interface between fixed sensation and plastic conception---shows the strongest effects.
 \end{enumerate}

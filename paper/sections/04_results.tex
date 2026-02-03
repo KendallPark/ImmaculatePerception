@@ -38,7 +38,7 @@ The frozen ViT encoder shows high CKA ($> 0.9$) throughout, as expected---the se
 \paragraph{Comparison 2: Before and After Learning Color}
 ($M_{gray,0}$ vs. $M_{gray,0}^{cont}$)
 
-Continued training on RGB images leads to substantial representational reorganization in the Modality Projector and early LLM layers (low CKA, high Procrustes disparity). This suggests that ``learning to see red'' requires restructuring the conceptual bridge, not just adding new features. Interestingly, later LLM layers show higher similarity, indicating that high-level semantic representations remain stable despite low-level restructuring.
+Continued training on RGB images leads to substantial representational reorganization in the Modality Projector and early Propositional Decoder layers (low CKA, high Procrustes disparity). This suggests that ``learning to see red'' requires restructuring the Gain Interface and Plastic Mind, not just adding new features. Interestingly, later LLM layers show higher similarity, indicating that high-level semantic representations remain stable despite low-level restructuring.
 
 \paragraph{Comparison 3: Different Learning Histories, Same Capability}
 ($M_{gray,0}^{cont}$ vs. $M_{rgb,0}$)
@@ -48,7 +48,7 @@ Despite both models now being capable of processing RGB input, their internal re
 \paragraph{Comparison 4: The Inverted Spectrum}
 ($M_{rgb,0}$ vs. $M_{rgb,1}$)
 
-This is our critical test. Both models were trained identically---same architecture, same data, same hyperparameters---differing only in their random initialization seeds. They achieve identical functional performance (same MMStar accuracy, indistinguishable text outputs for color naming tasks).
+This is our critical test. Both models were trained identically---same architecture, same data, same hyperparameters---differing only in their random initialization seeds. They achieve comparable functional performance (similar MMStar accuracy, indistinguishable text outputs for color naming tasks).
 
 Despite this \textbf{functional equivalence}, we observe:
 \begin{itemize}
@@ -57,7 +57,7 @@ Despite this \textbf{functional equivalence}, we observe:
   \item \textbf{High Representational Consistency} in late layers (semantic output is aligned)
 \end{itemize}
 
-This pattern provides a \textbf{computational existence proof for the Inverted Spectrum}: two agents can have identical behaviors and capabilities while maintaining structurally different internal representations of the same concepts. The color ``red'' for $M_{rgb,0}$ occupies a different geometric position in latent space than ``red'' for $M_{rgb,1}$---yet both correctly identify red objects and produce identical verbal outputs.
+This pattern provides a \textbf{computational rationale for the Inverted Spectrum}: two agents can have comparable behaviors and capabilities while maintaining structurally different internal representations of the same concepts. The color ``red'' for $M_{rgb,0}$ occupies a different geometric position in latent space than ``red'' for $M_{rgb,1}$---yet both correctly identify red objects and produce correct verbal outputs.
 
 \begin{figure}[t]
   \centering
