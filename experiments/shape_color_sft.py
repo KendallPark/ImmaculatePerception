@@ -26,7 +26,7 @@ class ShapeColorSFT(BasicTraining):
     run_name: str = "shape_color_sft_aug_10k_v1"
 
     # Training
-    epochs: int = 5 # Increased from 3 to 5 to help learn EOS token
+    epochs: int = 3 # Increased from 3 to 5 to help learn EOS token
     batch_size: int = 32
 
     # In BasicTraining, we have lr_mp and lr_backbones.
