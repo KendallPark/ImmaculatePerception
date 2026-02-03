@@ -98,7 +98,7 @@ Philosophers have proposed various responses to Jackson's Knowledge Argument. Re
 Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the Conceptual Bridge's learned capacity to translate chromatic formats into correct verbal responses.
 
 \paragraph{The Acquaintance Hypothesis}
-Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct experiential contact with redness, distinct from knowledge-that or knowledge-how. In our framework, this corresponds to the \textbf{Sensory Encoder's output}. The frozen vision encoder always produced chromatic representations; Mary's Conceptual Bridge simply never received them. Upon release, she becomes ``acquainted'' with a signal format that existed all along but was filtered out by her training regime.
+Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct experiential contact with redness, distinct from knowledge-that or knowledge-how. In our framework, acquaintance corresponds directly to the \textbf{``Wow'' signal}. The Sensory Encoder always produced chromatic representations, but the Modality Projector never encountered them during training. Upon release, the downstream system faces a representation it has never seen---and the measurable cost of this encounter (Mahalanobis distance spike) is the computational signature of ``becoming acquainted.'' The Wow signal \textit{is} acquaintance, operationalized.
 
 \paragraph{Old Fact / New Guise} \citep{Loar1990}
 Loar and Papineau argued that Mary learns no new facts; she merely grasps old facts under a new \textit{mode of presentation}. This aligns precisely with our architecture: the propositional content (``roses are red'') was always in the \textbf{Propositional Decoder}. What changes is the format in which this content is accessed. The ``new guise'' is the chromatic representation from the Sensory Encoder---a different input pathway to the same semantic knowledge.
@@ -111,18 +111,18 @@ These replies are not competitors but descriptions of different components of th
     \small
     \begin{tabular}{@{}llp{5cm}@{}}
         \hline
-        \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                                \\
+        \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                             \\
         \hline
-        Ability Hypothesis & VQA Performance            & Improved classification after chromatic fine-tuning                  \\
-        Acquaintance       & Sensory Encoder output     & Direct exposure to chromatic format (always existed, newly accessed) \\
-        Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                       \\
+        Ability Hypothesis & VQA Performance            & Improved VQA after chromatic fine-tuning                          \\
+        Acquaintance       & ``Wow'' Signal             & Mahalanobis distance spike when encountering novel representation \\
+        Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                    \\
         \hline
     \end{tabular}
     \caption{Mapping philosophical replies to MaryVLM components.}
     \label{tab:replies}
 \end{table*}
 
-The ``Wow'' signal is what \textit{all} these perspectives miss: the measurable computational cost of format translation at the Conceptual Bridge. This is neither a fact, nor an ability, nor a mode of presentation---it is the \textit{friction} between mismatched representational formats. Perhaps this is what qualia \textit{are}: the metabolic signature of translation.
+Thus the ``Wow'' signal plays a dual role: it \textit{is} the Acquaintance Hypothesis operationalized, \textit{and} it reveals something that the other perspectives miss---the measurable cost of format translation. The Ability Hypothesis concerns what Mary can \textit{do} after; the Old Fact/New Guise concerns the \textit{content} of her knowledge; but Acquaintance concerns the \textit{moment of contact itself}. That moment is the Wow signal: the metabolic signature of encountering a representation your system has never processed before.
 
 \subsection{Limitations}
 
