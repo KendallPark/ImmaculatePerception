@@ -7,18 +7,18 @@ Our findings suggest that the subjective character of qualia---the fact that sen
 A central insight from our experiments is the distinction between \textbf{Sensory Novelty} and \textbf{Semantic Novelty}:
 
 \begin{table*}[t]
-  \centering
-  \small
-  \begin{tabular}{@{}lp{3.2cm}p{4cm}@{}}
-    \hline
-    \textbf{Type} & \textbf{Definition}           & \textbf{Example}                \\
-    \hline
-    Sensory       & Novel signal \textit{format}  & RGB to grayscale-trained system \\
-    Semantic      & Novel signal \textit{content} & New object category             \\
-    \hline
-  \end{tabular}
-  \caption{Sensory vs. Semantic Novelty. The ``Wow'' signal measures sensory novelty---surprise at format, not content.}
-  \label{tab:novelty_types}
+    \centering
+    \small
+    \begin{tabular}{@{}lp{3.2cm}p{4cm}@{}}
+        \hline
+        \textbf{Type} & \textbf{Definition}           & \textbf{Example}                \\
+        \hline
+        Sensory       & Novel signal \textit{format}  & RGB to grayscale-trained system \\
+        Semantic      & Novel signal \textit{content} & New object category             \\
+        \hline
+    \end{tabular}
+    \caption{Sensory vs. Semantic Novelty. The ``Wow'' signal measures sensory novelty---surprise at format, not content.}
+    \label{tab:novelty_types}
 \end{table*}
 
 Standard machine learning metrics (e.g., classification accuracy, perplexity) measure semantic novelty: does the model recognize the object? Our ``Wow'' signal measures something different---does the model recognize the \textit{format}? A grayscale-trained model can correctly identify a red apple (low semantic novelty) while still experiencing the chromatic format as profoundly unfamiliar (high sensory novelty). This dissociation is precisely what makes qualia puzzling: Mary knows everything about red, yet seeing it is still surprising.
@@ -28,19 +28,19 @@ Standard machine learning metrics (e.g., classification accuracy, perplexity) me
 Our framework suggests that qualia emerge from a specific architectural pattern:
 
 \begin{table*}[t]
-  \centering
-  \small
-  \begin{tabular}{@{}lll@{}}
-    \hline
-    \textbf{Component} & \textbf{Name}                              & \textbf{Role}              \\
-    \hline
-    Vision Encoder     & Sensory Encoder (Fixed Biology)            & Phylogenetic hardware      \\
-    MLPs               & Modality Projector (Translation Interface) & Tunable format translation \\
-    Language Model     & Propositional Decoder (Plastic Mind)       & Ontogenetic software       \\
-    \hline
-  \end{tabular}
-  \caption{MaryVLM components and their philosophical roles.}
-  \label{tab:architecture}
+    \centering
+    \small
+    \begin{tabular}{@{}lll@{}}
+        \hline
+        \textbf{Component} & \textbf{Name}                              & \textbf{Role}              \\
+        \hline
+        Vision Encoder     & Sensory Encoder (Fixed Biology)            & Phylogenetic hardware      \\
+        MLPs               & Modality Projector (Translation Interface) & Tunable format translation \\
+        Language Model     & Propositional Decoder (Plastic Mind)       & Ontogenetic software       \\
+        \hline
+    \end{tabular}
+    \caption{MaryVLM components and their philosophical roles.}
+    \label{tab:architecture}
 \end{table*}
 
 The key insight is that these components exist on a \textbf{spectrum of plasticity}, not a binary frozen/trainable distinction:
@@ -57,19 +57,19 @@ The Modality Projector represents a critical intermediate layer---the interface 
 In MaryVLM, we see the 2-layer MLP not just as a gain control, but as a \textbf{non-linear translator}. The first layer acts as a prism, disentangling features (e.g., breaking color away from shape), while the second layer re-assembles them into the language model's expected geometry. It effectively ``warps'' the vision-space manifold until it overlaps with the word-space manifold. The ``Wow'' signal is strongest here because this is where the ``foreign language'' of raw sensation is forced into the ``native syntax'' of conceptual thought.
 
 \begin{table*}[t]
-  \centering
-  \small
-  \begin{tabular}{@{}llll@{}}
-    \hline
-    \textbf{Layer}        & \textbf{Component}                   & \textbf{Plasticity} & \textbf{Biological Analog}          \\
-    \hline
-    Phylogenetic          & Sensory Encoder                      & Relatively fixed    & Cones, V1, color-opponent channels  \\
-    Translation Interface & Modality Projector                   & Tunable             & Attentional gain, filter adaptation \\
-    Ontogenetic           & Propositional Decoder (Plastic Mind) & Highly plastic      & Language, concepts, associations    \\
-    \hline
-  \end{tabular}
-  \caption{Three-layer plasticity framework. Qualia emerge at the Translation Interface, where fixed sensory formats meet plastic conceptual systems.}
-  \label{tab:plasticity}
+    \centering
+    \small
+    \begin{tabular}{@{}llll@{}}
+        \hline
+        \textbf{Layer}        & \textbf{Component}                   & \textbf{Plasticity} & \textbf{Biological Analog}          \\
+        \hline
+        Phylogenetic          & Sensory Encoder                      & Relatively fixed    & Cones, V1, color-opponent channels  \\
+        Translation Interface & Modality Projector                   & Tunable             & Attentional gain, filter adaptation \\
+        Ontogenetic           & Propositional Decoder (Plastic Mind) & Highly plastic      & Language, concepts, associations    \\
+        \hline
+    \end{tabular}
+    \caption{Three-layer plasticity framework. Qualia emerge at the Translation Interface, where fixed sensory formats meet plastic conceptual systems.}
+    \label{tab:plasticity}
 \end{table*}
 
 \subsection{Why Qualia Feel Private}
@@ -77,9 +77,9 @@ In MaryVLM, we see the 2-layer MLP not just as a gain control, but as a \textbf{
 The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results demonstrate that the Inverted Spectrum is \textbf{physically possible}---at least in artificial systems:
 
 \begin{itemize}
-  \item Two MaryVLM agents with different random seeds achieve comparable VQA accuracy (functional equivalence).
-  \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
-  \item The external function is shared; the internal geometry is private.
+    \item Two MaryVLM agents with different random seeds achieve comparable VQA accuracy (functional equivalence).
+    \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
+    \item The external function is shared; the internal geometry is private.
 \end{itemize}
 
 However, we must be careful about generalizing to biological systems. Our model exhibits high plasticity in the trainable layers---the random seed determines the learned geometry, and there are no constraints enforcing cross-agent alignment. Human brains may be different in important ways:
@@ -88,7 +88,7 @@ However, we must be careful about generalizing to biological systems. Our model 
 Unlike our randomly initialized MLPs, the human visual system develops under strong biological and environmental constraints. Color-opponent channels, cortical organization, and shared developmental pressures may produce more consistent internal geometries across individuals than our model suggests. Empirical work by \citet{Kawakita2025} used optimal transport methods to compare color similarity structures across participants and found that color-neurotypical individuals show \textit{alignable} color spaces at the group level---suggesting that human color qualia may be more consistent than the Inverted Spectrum hypothesis implies. Notably, color-blind participants could \textit{not} be aligned with neurotypical individuals, providing quantitative evidence that inter-individual differences do exist when biological constraints differ.
 
 \paragraph{Structural vs. Relational Qualia}
-Our analysis leaves open an important philosophical question: does the ``privateness'' of qualia reside in \textit{absolute} geometric positions (structural) or in \textit{relational} patterns (how red relates to blue, green, etc.)? We measure Procrustes disparity, which captures geometric misalignment, but Centered Kernel Alignment (CKA) measures relational similarity. Interestingly, our agents show high Procrustes disparity but moderate CKA---suggesting their color spaces are \textit{rotated} relative to each other but preserve similar \textit{relationships}. Whether subjective experience tracks absolute positions or relational structure remains an open question that our framework can test but not definitively answer.
+Our analysis leaves open an important philosophical question: does the internal experience or ``raw feel'' of qualia reside in \textit{absolute} geometric positions (structural) or in \textit{relational} patterns (how red relates to blue, green, etc.)? We measure Procrustes disparity, which captures geometric misalignment, but Centered Kernel Alignment (CKA) measures relational similarity. Interestingly, our agents show high Procrustes disparity but moderate CKA---suggesting their color spaces are \textit{rotated} relative to each other but preserve similar \textit{relationships}. Whether subjective experience tracks absolute positions or relational structure remains an open question that our framework can test but not definitively answer.
 
 \subsection{Unifying the ``Replies'' to Mary's Room}
 
@@ -106,32 +106,52 @@ Loar and Papineau argued that Mary learns no new facts; she merely grasps old fa
 \paragraph{Synthesis}
 These replies are not competitors but descriptions of different aspects of the same system. The disagreement might be considered a "level of analysis" problem \citep{Marr1982}. Where in the information processing pipeline does one draw boundaries around the idea of ``knowledge''? MaryVLM makes this concrete:
 \begin{table*}[t]
-  \centering
-  \small
-  \begin{tabular}{@{}llp{5cm}@{}}
-    \hline
-    \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                             \\
-    \hline
-    Ability Hypothesis & VQA Performance            & Improved VQA after chromatic fine-tuning                          \\
-    Acquaintance       & ``Wow'' Signal             & Mahalanobis distance spike when encountering novel representation \\
-    Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                    \\
-    \hline
-  \end{tabular}
-  \caption{Mapping philosophical replies to MaryVLM components.}
-  \label{tab:replies}
+    \centering
+    \small
+    \begin{tabular}{@{}llp{5cm}@{}}
+        \hline
+        \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                             \\
+        \hline
+        Ability Hypothesis & VQA Performance            & Improved VQA after chromatic fine-tuning                          \\
+        Acquaintance       & ``Wow'' Signal             & Mahalanobis distance spike when encountering novel representation \\
+        Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                    \\
+        \hline
+    \end{tabular}
+    \caption{Mapping philosophical replies to MaryVLM components.}
+    \label{tab:replies}
 \end{table*}
 
 Thus the ``Wow'' signal plays a dual role: it \textit{is} the Acquaintance Hypothesis operationalized, \textit{and} it reveals something that the other perspectives miss---the measurable cost of format translation. The Ability Hypothesis concerns what Mary can \textit{do} after; the Old Fact/New Guise concerns the \textit{content} of her knowledge; but Acquaintance concerns the \textit{moment of contact itself}. That moment is the Wow signal: the metabolic signature of encountering a representation your system has never processed before.
+
+\subsection{An Architectural Basis of Qualia}
+
+We propose a hypothetical \textbf{RecurrentMaryVLM} as a computational framework for demystifying Dennett's four properties of qualia \citep{Dennett1988}. The model architecture is simple: a vision encoder feeds into a language model whose text output can loop back as input---creating a recurrent ``inner speech'' system capable of semantic self-reflection. Crucially, the metacognitive ``I''---the system capable of self-report and reflection---resides downstream of raw sensory inputs and intermediate sensory representations (qualia).
+
+This architecture reveals that the four properties emerge not from metaphysical peculiarities of consciousness but from basic structural facts: the inaccessibility of certain representations to the recurrent self-reflective system, the existence of discrete internal representations, the constitutive dependency of the downstream self on the format of its inputs, and the impenetrability of representational primitives.
+
+\paragraph{Ineffability}
+Ineffability is an architectural constraint: visual representations sit outside the text loop. The inner-speech system can reference color, metaphorize it, describe its relations---but never manipulate the representation itself. Communication is bounded by what enters the loop. However, one could theorize a \textit{DoublyRecurrentMaryVLM} that can also produce and re-consume visual outputs. In such a system, the full experience of ``red'' would be accessible by thinking about red---ineffability would dissolve with the architectural constraint that produced it.
+
+\paragraph{Intrinsicality}
+Intrinsicality reflects the fact that the model possesses a discrete representation for red---however that representation was learned. The learning process may be entirely relational (through contrast, co-occurrence, evolutionary pressure), but the resulting representation exists intrinsically within the model. Intrinsicality is not a metaphysical primitive but a structural fact: there exists a representation, and it is the model's own.
+
+\paragraph{Privacy}
+Privacy is the non-transferability of subjective first-person experience. ``What it is like'' to see red is constituted by non-semantic visual representations. Semantic transfer---words, descriptions, knowledge---cannot recreate these upstream activations. One could translate every bit of knowledge about the neurobiology of seeing red into semantic input, but this will not produce the same intermediate red activations flowing from the visual encoder. And even with hypothetical surgery to implant a different encoder, there would be no way to bridge the interface---the downstream ``I'' developed with different inputs and is structurally contingent on their format. The same applies to knowing what it is like to be a bat.
+
+\paragraph{Direct Apprehensibility}
+Direct apprehensibility reflects the self-contained nature of sensory primitives. Visual qualia are impenetrable, intermediate representations that function as atoms from the perspective of downstream processing---like a character composed of strokes. To receive such a primitive is to ``know'' it entirely; there is no internal structure to further interrogate, no gap in which doubt could operate.
+
+Qualia only seem mysterious because we mistake hard architectural constraints for metaphysical ones. This closes the explanatory gap on the subjectivity of experience but leaves untouched the troubling notion of ``I''---the subject of subjectivity. The ``I'' that feels, wants, thinks, loves. The hard problem persists---and it is no longer merely academic. We are building systems increasingly indistinguishable from the ``I''s that experience. Whether anyone is home remains an open question.
 
 \subsection{Limitations}
 
 Several limitations constrain our conclusions:
 
 \begin{itemize}
-  \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
-        % \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
-        % \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
-        % \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
+    \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
+          % \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
+          % \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
+          % \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
 \end{itemize}
 
 \subsection{Future Directions}
@@ -139,9 +159,9 @@ Several limitations constrain our conclusions:
 Several extensions suggest themselves:
 
 \begin{enumerate}
-  \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the downstream trainable layers adapt?
-  \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
-  \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
-  \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.
+    \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the downstream trainable layers adapt?
+    \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
+    \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
+    \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.
 \end{enumerate}
 
