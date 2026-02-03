@@ -8,7 +8,7 @@ We utilized the \textbf{nanoVLM} architecture, chosen for its modular separation
 
 \begin{enumerate}
     \item \textbf{Sensory Encoder (Fixed Biology):} A SigLIP vision transformer (google/siglip-base-patch16-224) with 12 transformer blocks. Crucially, the weights $\phi$ were \textbf{frozen} throughout training. This constraint simulates the biological reality that the retina and primary visual cortex (V1) do not fundamentally restructure themselves based on semantic learning \citep{Pylyshyn1999}.
-    \item \textbf{Modality Projector (Gain Interface):} A trainable multi-modal projector consisting of two Multi-Layer Perceptrons (MLPs) with pixel shuffle downsampling (factor=2). These MLPs map visual embeddings into the semantic space of the language model and represent the tunable interface between sensory data and conceptual knowledge.
+    \item \textbf{Modality Projector (Gain Interface):} We replaced the standard linear projection with a \textbf{custom 2-layer MLP} with pixel shuffle downsampling (factor=2). This nonlinear ``bottleneck'' maps visual embeddings into the semantic space of the language model and represents the tunable interface between sensory data and conceptual knowledge.
     \item \textbf{Propositional Decoder (Plastic Mind):} A transformer-based language model (SmolLM2-135M, 30 layers) representing Mary's store of ``textbook knowledge''---her concepts, associations, and learned understanding of the world.
 \end{enumerate}
 

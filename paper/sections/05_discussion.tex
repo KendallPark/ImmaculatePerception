@@ -7,18 +7,18 @@ Our findings suggest that the subjective character of qualia---the fact that sen
 A central insight from our experiments is the distinction between \textbf{Sensory Novelty} and \textbf{Semantic Novelty}:
 
 \begin{table*}[t]
-    \centering
-    \small
-    \begin{tabular}{@{}lp{3.2cm}p{4cm}@{}}
-        \hline
-        \textbf{Type} & \textbf{Definition}           & \textbf{Example}                \\
-        \hline
-        Sensory       & Novel signal \textit{format}  & RGB to grayscale-trained system \\
-        Semantic      & Novel signal \textit{content} & New object category             \\
-        \hline
-    \end{tabular}
-    \caption{Sensory vs. Semantic Novelty. The ``Wow'' signal measures sensory novelty---surprise at format, not content.}
-    \label{tab:novelty_types}
+  \centering
+  \small
+  \begin{tabular}{@{}lp{3.2cm}p{4cm}@{}}
+    \hline
+    \textbf{Type} & \textbf{Definition}           & \textbf{Example}                \\
+    \hline
+    Sensory       & Novel signal \textit{format}  & RGB to grayscale-trained system \\
+    Semantic      & Novel signal \textit{content} & New object category             \\
+    \hline
+  \end{tabular}
+  \caption{Sensory vs. Semantic Novelty. The ``Wow'' signal measures sensory novelty---surprise at format, not content.}
+  \label{tab:novelty_types}
 \end{table*}
 
 Standard machine learning metrics (e.g., classification accuracy, perplexity) measure semantic novelty: does the model recognize the object? Our ``Wow'' signal measures something different---does the model recognize the \textit{format}? A grayscale-trained model can correctly identify a red apple (low semantic novelty) while still experiencing the chromatic format as profoundly unfamiliar (high sensory novelty). This dissociation is precisely what makes qualia puzzling: Mary knows everything about red, yet seeing it is still surprising.
@@ -28,19 +28,19 @@ Standard machine learning metrics (e.g., classification accuracy, perplexity) me
 Our framework suggests that qualia emerge from a specific architectural pattern:
 
 \begin{table*}[t]
-    \centering
-    \small
-    \begin{tabular}{@{}lll@{}}
-        \hline
-        \textbf{Component} & \textbf{Name}                        & \textbf{Role}              \\
-        \hline
-        Vision Encoder     & Sensory Encoder (Fixed Biology)      & Phylogenetic hardware      \\
-        MLPs               & Modality Projector (Gain Interface)  & Tunable format translation \\
-        Language Model     & Propositional Decoder (Plastic Mind) & Ontogenetic software       \\
-        \hline
-    \end{tabular}
-    \caption{MaryVLM components and their philosophical roles.}
-    \label{tab:architecture}
+  \centering
+  \small
+  \begin{tabular}{@{}lll@{}}
+    \hline
+    \textbf{Component} & \textbf{Name}                              & \textbf{Role}              \\
+    \hline
+    Vision Encoder     & Sensory Encoder (Fixed Biology)            & Phylogenetic hardware      \\
+    MLPs               & Modality Projector (Translation Interface) & Tunable format translation \\
+    Language Model     & Propositional Decoder (Plastic Mind)       & Ontogenetic software       \\
+    \hline
+  \end{tabular}
+  \caption{MaryVLM components and their philosophical roles.}
+  \label{tab:architecture}
 \end{table*}
 
 The key insight is that these components exist on a \textbf{spectrum of plasticity}, not a binary frozen/trainable distinction:
@@ -51,25 +51,25 @@ The Sensory Encoder represents evolutionarily-determined processing---structures
 \paragraph{Ontogenetic Processing (Plastic Mind)}
 The Language Model represents knowledge acquired through experience---language, concepts, and associations learned during development and life. This system is highly plastic, continuously updated by experience. Mary's ``textbook knowledge'' about color resides here.
 
-\paragraph{The Gain Interface (Blurred Boundary)}
-The Modality Projector represents a critical intermediate layer---the interface where phylogenetic signals are translated into ontogenetic representations. Crucially, \citet{Rabin2020} found that after anomalous trichromats wore color-corrective filters for two weeks, they showed improved chromatic responses \textit{even when not wearing the glasses}. This suggests the adult visual system retains plasticity at this interface: the ``hardcoded'' pathways remain, but the gain or weighting between sensory input and conceptual processing can be re-tuned when provided with high-contrast signals previously missing.
+\paragraph{The Translation Interface (Blurred Boundary)}
+The Modality Projector represents a critical intermediate layer---the interface where phylogenetic signals are translated into ontogenetic representations. Crucially, \citet{Rabin2020} found that after anomalous trichromats wore color-corrective filters for two weeks, they showed improved chromatic responses \textit{even when not wearing the glasses}. This suggests the adult visual system retains plasticity at this interface.
 
-In MaryVLM, this corresponds to the Modality Projector---trainable layers that learn to amplify, suppress, or transform specific dimensions of the sensory manifold. The ``Wow'' signal is strongest at this interface precisely because it is where format translation occurs.
+In MaryVLM, we see the 2-layer MLP not just as a gain control, but as a \textbf{non-linear translator}. The first layer acts as a prism, disentangling features (e.g., breaking color away from shape), while the second layer re-assembles them into the language model's expected geometry. It effectively ``warps'' the vision-space manifold until it overlaps with the word-space manifold. The ``Wow'' signal is strongest here because this is where the ``foreign language'' of raw sensation is forced into the ``native syntax'' of conceptual thought.
 
 \begin{table*}[t]
-    \centering
-    \small
-    \begin{tabular}{@{}llll@{}}
-        \hline
-        \textbf{Layer} & \textbf{Component}                   & \textbf{Plasticity} & \textbf{Biological Analog}          \\
-        \hline
-        Phylogenetic   & Sensory Encoder                      & Relatively fixed    & Cones, V1, color-opponent channels  \\
-        Gain Interface & Modality Projector                   & Tunable             & Attentional gain, filter adaptation \\
-        Ontogenetic    & Propositional Decoder (Plastic Mind) & Highly plastic      & Language, concepts, associations    \\
-        \hline
-    \end{tabular}
-    \caption{Three-layer plasticity framework. Qualia emerge at the Gain Interface, where fixed sensory formats meet plastic conceptual systems.}
-    \label{tab:plasticity}
+  \centering
+  \small
+  \begin{tabular}{@{}llll@{}}
+    \hline
+    \textbf{Layer}        & \textbf{Component}                   & \textbf{Plasticity} & \textbf{Biological Analog}          \\
+    \hline
+    Phylogenetic          & Sensory Encoder                      & Relatively fixed    & Cones, V1, color-opponent channels  \\
+    Translation Interface & Modality Projector                   & Tunable             & Attentional gain, filter adaptation \\
+    Ontogenetic           & Propositional Decoder (Plastic Mind) & Highly plastic      & Language, concepts, associations    \\
+    \hline
+  \end{tabular}
+  \caption{Three-layer plasticity framework. Qualia emerge at the Translation Interface, where fixed sensory formats meet plastic conceptual systems.}
+  \label{tab:plasticity}
 \end{table*}
 
 \subsection{Why Qualia Feel Private}
@@ -77,9 +77,9 @@ In MaryVLM, this corresponds to the Modality Projector---trainable layers that l
 The Inverted Spectrum has long been cited as a puzzle for functionalism: how can two agents produce identical behaviors while having different internal experiences? Our results demonstrate that the Inverted Spectrum is \textbf{physically possible}---at least in artificial systems:
 
 \begin{itemize}
-    \item Two MaryVLM agents with different random seeds achieve comparable VQA accuracy (functional equivalence).
-    \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
-    \item The external function is shared; the internal geometry is private.
+  \item Two MaryVLM agents with different random seeds achieve comparable VQA accuracy (functional equivalence).
+  \item Yet their internal representations of ``red'' occupy different geometric positions (structural disparity).
+  \item The external function is shared; the internal geometry is private.
 \end{itemize}
 
 However, we must be careful about generalizing to biological systems. Our model exhibits high plasticity in the trainable layers---the random seed determines the learned geometry, and there are no constraints enforcing cross-agent alignment. Human brains may be different in important ways:
@@ -95,7 +95,7 @@ Our analysis leaves open an important philosophical question: does the ``private
 Philosophers have proposed various responses to Jackson's Knowledge Argument. Remarkably, MaryVLM provides a unified framework in which each ``reply'' corresponds to a distinct computational component:
 
 \paragraph{The Ability Hypothesis} \citep{Nemirow1990}
-Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the joint capacity of the Modality Projector and Propositional Decoder to translate chromatic formats into correct verbal responses---a learned skill that spans the Gain Interface and the Plastic Mind.
+Lewis and Nemirow argued that Mary gains not new propositional knowledge, but new \textit{abilities}: to recognize, remember, and imagine red. In MaryVLM terms, this maps directly to \textbf{VQA performance}. After chromatic exposure (continued training on RGB), $M_{gray}^{cont}$ shows improved accuracy on color-related questions. The ``ability'' is the joint capacity of the Modality Projector and Propositional Decoder to translate chromatic formats into correct verbal responses---a learned skill that spans the Translation Interface and the Plastic Mind.
 
 \paragraph{The Acquaintance Hypothesis}
 Conee proposed that Mary gains \textit{knowledge by acquaintance}---direct experiential contact with redness, distinct from knowledge-that or knowledge-how. In our framework, acquaintance corresponds directly to the \textbf{``Wow'' signal}. The Sensory Encoder always produced chromatic representations, but the Modality Projector never encountered them during training. Upon release, the downstream system faces a representation it has never seen---and the measurable cost of this encounter (Mahalanobis distance spike) is the computational signature of ``becoming acquainted.'' The Wow signal \textit{is} acquaintance, operationalized.
@@ -106,19 +106,19 @@ Loar and Papineau argued that Mary learns no new facts; she merely grasps old fa
 \paragraph{Synthesis}
 These replies are not competitors but descriptions of different aspects of the same system. The disagreement might be considered a "level of analysis" problem \citep{Marr1982}. Where in the information processing pipeline does one draw boundaries around the idea of ``knowledge''? MaryVLM makes this concrete:
 \begin{table*}[t]
-    \centering
-    \small
-    \begin{tabular}{@{}llp{5cm}@{}}
-        \hline
-        \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                             \\
-        \hline
-        Ability Hypothesis & VQA Performance            & Improved VQA after chromatic fine-tuning                          \\
-        Acquaintance       & ``Wow'' Signal             & Mahalanobis distance spike when encountering novel representation \\
-        Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                    \\
-        \hline
-    \end{tabular}
-    \caption{Mapping philosophical replies to MaryVLM components.}
-    \label{tab:replies}
+  \centering
+  \small
+  \begin{tabular}{@{}llp{5cm}@{}}
+    \hline
+    \textbf{Reply}     & \textbf{MaryVLM Component} & \textbf{Computational Interpretation}                             \\
+    \hline
+    Ability Hypothesis & VQA Performance            & Improved VQA after chromatic fine-tuning                          \\
+    Acquaintance       & ``Wow'' Signal             & Mahalanobis distance spike when encountering novel representation \\
+    Old Fact/New Guise & Propositional Decoder      & Same semantic content, different input pathway                    \\
+    \hline
+  \end{tabular}
+  \caption{Mapping philosophical replies to MaryVLM components.}
+  \label{tab:replies}
 \end{table*}
 
 Thus the ``Wow'' signal plays a dual role: it \textit{is} the Acquaintance Hypothesis operationalized, \textit{and} it reveals something that the other perspectives miss---the measurable cost of format translation. The Ability Hypothesis concerns what Mary can \textit{do} after; the Old Fact/New Guise concerns the \textit{content} of her knowledge; but Acquaintance concerns the \textit{moment of contact itself}. That moment is the Wow signal: the metabolic signature of encountering a representation your system has never processed before.
@@ -128,10 +128,10 @@ Thus the ``Wow'' signal plays a dual role: it \textit{is} the Acquaintance Hypot
 Several limitations constrain our conclusions:
 
 \begin{itemize}
-    \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
-          % \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
-          % \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
-          % \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
+  \item \textbf{Scale}: Our model is small (135M LLM parameters). Larger models may show different dynamics.
+        % \item \textbf{Simplicity of stimuli}: We used synthetic color-shape images. Natural images introduce confounds (textures, gradients) that may complicate interpretation.
+        % \item \textbf{Single modality}: We tested only vision. Generalizing to auditory or tactile qualia requires further work.
+        % \item \textbf{No temporal dynamics}: We measure a single ``Release'' event. Biological qualia adapt over time; our model does not capture habituation.
 \end{itemize}
 
 \subsection{Future Directions}
@@ -139,9 +139,9 @@ Several limitations constrain our conclusions:
 Several extensions suggest themselves:
 
 \begin{enumerate}
-    \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the downstream trainable layers adapt?
-    \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
-    \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
-    \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.
+  \item \textbf{Chromatic fine-tuning}: What happens to the ``Wow'' signal as Mary learns to process color? Does it decay as the downstream trainable layers adapt?
+  \item \textbf{Multi-modal qualia}: Extend to auditory stimuli (a grayscale-trained model exposed to audio) to test whether the ``Wow'' signal is modality-general.
+  \item \textbf{Collective Mary}: Train multiple Marys with private experiences but a shared language, modeling how communities develop shared concepts despite private qualia.
+  \item \textbf{Attention and gating}: Investigate whether the ``Wow'' signal modulates attention or ``promotes'' information to higher processing stages, as predicted by Global Workspace theory.
 \end{enumerate}
 
