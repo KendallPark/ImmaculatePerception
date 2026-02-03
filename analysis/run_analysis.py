@@ -63,28 +63,28 @@ def main():
     configs = [
         {
             "name": r"MaryVLM$_{gray,0}$ (gray)",
-            "repo_id": "output/sft_gray0_gray/checkpoint-291",
+            "repo_id": "output/sft_gray0_gray_aug_10k/checkpoint-2000",
             "gray_input": True
         },
         {
             "name": r"MaryVLM$_{gray,0}$ (rgb)",
-            "repo_id": "output/sft_gray0_rgb/checkpoint-291",
+            "repo_id": "output/sft_gray0_rgb_aug_10k/checkpoint-2000",
             "gray_input": False
         },
         {
             "name": r"MaryVLM$_{gray,0}^{cont}$ (rgb)",
-            "repo_id": "output/sft_gray0_cont_rgb/checkpoint-291",
+            "repo_id": "output/sft_gray0_cont_rgb_aug_10k/checkpoint-2000",
             "gray_input": False
         },
         {
             "name": r"MaryVLM$_{rgb,0}$ (rgb)",
-            # "repo_id": "output/maryVLM_bs256_rgb_ms0_ds0/checkpoint-26064",
-            "repo_id": "output/sft_rgb0/checkpoint-291",
+            # "repo_id": "output/maryVLM_bs256_rgb_ms0_ds0_aug_10k/checkpoint-26064",
+            "repo_id": "output/sft_rgb0_aug_10k/checkpoint-2000",
             "gray_input": False
         },
         {
             "name": r"MaryVLM$_{rgb,1}$ (rgb)",
-            "repo_id": "output/sft_rgb1/checkpoint-291",
+            "repo_id": "output/sft_rgb1_aug_10k/checkpoint-2000",
             "gray_input": False
         }
     ]
@@ -455,6 +455,91 @@ def plot_all_metric_comparisons(all_acts, comparisons):
     plt.savefig(save_path)
     plt.close()
     print(f"Saved combined metrics plot to {save_path}")
+
+    # Save data for future use
+    import json
+    json_path = "analysis/results/metrics_comparison.json"
+    with open(json_path, 'w') as f:
+        json.dump(results, f, indent=2)
+    print(f"Saved metrics data to {json_path}")
+
+    # Generate Small Version
+    plot_metrics_small(results)
+
+def plot_metrics_small(results):
+    """
+    Generates a compact, half-page friendly version of the metrics plot.
+    """
+    if not results: return
+
+    # Setup figure for roughly half-page (single column in 2-col layout)
+    # Width ~8 inches, Height ~10 inches
+    fig, axes = plt.subplots(3, 1, figsize=(8, 10), sharex=True)
+
+    common_layers = results[0]['layers']
+    x = range(len(common_layers))
+
+    # Use distinct style
+    markers = ['o', 's', '^', 'D', 'v', '<', '>']
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
+
+    for i, res in enumerate(results):
+        m = markers[i % len(markers)]
+        c = colors[i % len(colors)]
+        lbl = res['label']
+
+        # Thicker lines, larger markers
+        axes[0].plot(x, res['cka'], marker=m, markersize=6, linewidth=2, color=c, label=lbl, alpha=0.8)
+        axes[1].plot(x, res['const'], marker=m, markersize=6, linewidth=2, color=c, label=lbl, alpha=0.8)
+        axes[2].plot(x, res['proc'], marker=m, markersize=6, linewidth=2, color=c, label=lbl, alpha=0.8)
+
+    # Styling function
+    def style_ax(ax, title, ylabel):
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
+        ax.grid(True, alpha=0.3)
+        ax.tick_params(axis='y', labelsize=10)
+
+    style_ax(axes[0], "CKA Similarity", "CKA")
+    axes[0].set_ylim(0, 1.1)
+
+    # REMOVED local legend
+    # axes[0].legend(fontsize=9, loc='lower right', framealpha=0.9)
+
+    style_ax(axes[1], "Representational Consistency", "Spearman \u03C1")
+    axes[1].set_ylim(0, 1.1)
+
+    style_ax(axes[2], "Procrustes Distance", "Disparity")
+
+    # Sparse X-Ticks Logic
+    tick_indices = []
+    tick_labels = []
+    for i, layer in enumerate(common_layers):
+        show_tick = False
+        if "ModalityProjector" in layer: show_tick = True
+        elif "ViT.Block.0" in layer or "ViT.Block.11" in layer: show_tick = True
+        elif "LLM.Block.0" in layer or "LLM.Block.29" in layer: show_tick = True
+        elif "LLM.Block.15" in layer: show_tick = True
+
+        if show_tick:
+            tick_indices.append(i)
+            clean_label = layer.replace("ViT.Block.", "ViT-").replace("LLM.Block.", "LLM-").replace("ModalityProjector", "Proj")
+            tick_labels.append(clean_label)
+
+    plt.xticks(tick_indices, tick_labels, rotation=45, ha='right', fontsize=11, fontweight='bold')
+    plt.xlabel("Layer", fontsize=12, fontweight='bold')
+
+    # Global Legend at Bottom
+    handles, labels = axes[0].get_legend_handles_labels()
+    # Adjust layout to make room for bottom legend - specific fix for cutoff
+    plt.tight_layout(rect=[0, 0.12, 1, 1])
+    fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.02),
+               ncol=2, fontsize=12, frameon=False)
+
+    save_path = "analysis/plots/combined_metrics_comparison_small.png"
+    plt.savefig(save_path, dpi=300)
+    plt.close()
+    print(f"Saved small combined metrics plot to {save_path}")
 
 if __name__ == "__main__":
     main()
